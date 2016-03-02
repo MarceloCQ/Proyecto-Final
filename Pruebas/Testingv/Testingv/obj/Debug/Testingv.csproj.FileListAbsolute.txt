@@ -1,0 +1,3 @@
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\Pruebas\Testingv\Testingv\bin\Debug\Testingv.exe.config
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\Pruebas\Testingv\Testingv\obj\Debug\Testingv.csprojResolveAssemblyReference.cache
+C:\Users\Marcelo Surface\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\Pruebas\Testingv\Testingv\bin\Debug\Testingv.exe.config

@@ -1,0 +1,97 @@
+COMPILER PLearning
+  
+/*--------------------------------------------------------------------------*/
+CHARACTERS
+	letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+	digit = "0123456789".
+	eol                = '\u000a'. /* 10 = line feed */
+	cr  = '\r'.
+	newLine = cr + eol. 
+	char = ANY - "'" - '\\' - newLine.
+	lf  = '\n'.
+	tab = '\t'.
+
+TOKENS
+	ID = letter { letter | digit }.
+	CTEENTERA = digit {digit}.
+	CTEFLOAT = digit {digit} "." digit {digit}.
+	CTESTRING = '"' letter { letter | digit } '"'.
+	CTECHAR = '\'' char '\''.
+	PROGRAM  = "program".
+	MAIN = "main".
+	VOID = "void".
+	INT = "int".
+	FLOAT = "float".
+	STRING = "string".
+	BOOL = "bool".
+	CHAR = "char".
+	IFF = "if".
+	ELSE = "else".
+	AND = "and".
+	OR = "or".
+	WHILE = "while".
+	FOR = "for".
+	RETURN = "return".
+	PRINT = "print".
+	READLINE = "readLine".
+	FUNCTION = "function".
+	TRUE = "true".
+	FALSE = "false".
+	REF = "ref".
+	PYC = ";".
+	COMA = ",".
+	IGUAL = "=".
+	PARAB = "(".
+	PARCI = ")".
+	LLAVEAB = "{".
+	LLAVECI = "}".
+	CORCHAB = "[".
+	CORCHCI = "]".
+	MAS = "+".
+	MENOS = "-".
+	MULT = "*".
+	DIV = "/".
+	MAQUE = ">".
+	MEQUE = "<".
+	DIFERENTE = "!=".
+	COMPARACION = "==".
+
+
+IGNORE cr + lf + tab
+
+
+
+PRODUCTIONS
+/*------------------------------------------------------------------------*/
+PLearning = PROGRAM ID PYC {vars} {funcion} main.
+vars = tipo ( ID {COMA ID } [IGUAL (ctelet | ctenum | ctebool)] PYC | CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI ID {COMA ID} PYC ).
+funcion = FUNCTION regresa ID PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
+main = VOID MAIN PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI .
+regresa = (tipo | VOID).
+tipo = (INT | FLOAT | STRING | BOOL | CHAR).
+bloque = LLAVEAB {estatuto} LLAVECI .
+ciclowhile = WHILE PARAB expresion PARCI bloque.
+ciclofor = FOR PARAB ID IGUAL expresion PYC expresion PYC expresion PARCI bloque.
+ciclos = (ciclowhile | ciclofor).
+condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
+estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
+lectura = READLINE PARAB PARCI.
+escritura = PRINT PARAB expresion { COMA expresion } PARCI PYC.
+asignacionollamada = ID ([cuantificador] IGUAL (expresion | lectura) | PARAB [expresion {COMA expresion }] PARCI) PYC.
+ctelet = (CTESTRING | CTECHAR).
+ctebool = (TRUE | FALSE).
+ctenum = (CTEENTERA | CTEFLOAT).
+cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
+parametro = [REF] tipo ID [ CORCHAB CORCHCI].
+expresion = comparacion {(AND | OR) comparacion}.
+comparacion = exp [(MAQUE | MEQUE | DIFERENTE | COMPARACION) exp].
+exp = term {(MAS | MENOS) term}.
+term = factor {(MULT | DIV) factor}.
+factor = PARAB expresion PARCI | [MAS | MENOS] ctevar.
+ctevar = (ctelet | ctebool | ctenum | ID [ (PARAB [expresion {COMA expresion }] PARCI | cuantificador ) ] ).
+
+
+/*------------------------------------------------------------------------*/
+
+
+END PLearning.

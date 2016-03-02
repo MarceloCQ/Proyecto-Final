@@ -1,0 +1,30 @@
+PLEARNING = program id ";" {VARS} {FUNCION} MAIN.
+VARS = (ARREGLOS | MATRICES | ATOMICOS).
+ATOMICOS = TIPO id {"," id } ["=" (CTELET | CTENUM | CTEBOOL)] ";".
+FUNCION = function REGRESA id "("  [PARAMETRO {"," PARAMETRO }] ")" "{" {VARS} { ESTATUTO } [return EXPRESION ";"] "}".
+MAIN = void main "(" ")" "{" {VARS} { ESTATUTO } "}".
+REGRESA = (TIPO | void).
+TIPO = (int | float | string | bool | char).
+ARREGLOS = TIPO "[" "cte.entera" "]" id {"," id} ";".
+BLOQUE = "{" {VARS} {ESTATUTO} [return EXPRESION ";"] "}".
+MATRICES = TIPO "[" "cte.entera" "," "cte.entera" "]" id {"," id} ";".
+WHILE = while "(" EXPRESION ")" BLOQUE.
+FOR = for "(" id "=" EXPRESION ";" EXPRESION ";" EXPRESION ")" BLOQUE.
+CICLOS = (WHILE | FOR).
+CONDICION = if "(" EXPRESION ")" BLOQUE [else  BLOQUE].
+ESTATUTO = (ASIGNACION | CONDICION | ESCRITURA | CICLOS | LLAMADA). 
+LECTURA = readline "(" ")".
+ESCRITURA = print "(" EXPRESION { "," EXPRESION } ")" ";".
+CTELET = ("cte.string" | "cte.char").
+CTEBOOL = (true | false).
+CTENUM = ("cte.entera" | "cte.float").
+CUANTIFICADOR = "[" EXPRESION ["," EXPRESION ] "]".
+ASIGNACION = id [CUANTIFICADOR] "=" (EXPRESION | LECTURA) ";".
+PARAMETRO = [ref] TIPO id [ "[" "]"].
+EXPRESION = COMPARACION {(and | or) COMPARACION}.
+COMPARACION = EXP [(">" | "<" | "!=" | "==") EXP].
+EXP = TERM {("+" | "-") TERM}.
+TERM = FACTOR {("*" | "/") FACTOR}.
+FACTOR = "(" EXPRESION ")" | ["+" | "-"] CTEVAR.
+CTEVAR = (CTELET | CTEBOOL | CTENUM | id [ ("(" [EXPRESION {"," EXPRESION }] ")" | CUANTIFICADOR ) ] ).
+LLAMADA = id "(" [EXPRESION {"," EXPRESION }] ")" ";".
