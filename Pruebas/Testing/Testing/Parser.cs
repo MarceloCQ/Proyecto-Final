@@ -69,7 +69,7 @@ public class Parser {
 	}
 
 	void SynErr (int n) {
-		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n);
+		if (errDist >= minErrDist) errors.SynErr(la.line, la.col, n, la);
 		errDist = 0;
 	}
 
@@ -511,11 +511,11 @@ public class Errors {
 	public System.IO.TextWriter errorStream = Console.Out;   // error messages go to this stream
 	public string errMsgFormat = "-- line {0} col {1}: {2}"; // 0=line, 1=column, 2=text
 
-	public virtual void SynErr (int line, int col, int n) {
+	public virtual void SynErr (int line, int col, int n, Token la) {
 		string s;
 		switch (n) {
 			case 0: s = "EOF expected"; break;
-			case 1: s = "ID expected"; break;
+			case 1: s = "se esperaba un id y se encontro " + la.val; break;
 			case 2: s = "CTEENTERA expected"; break;
 			case 3: s = "CTEFLOAT expected"; break;
 			case 4: s = "CTESTRING expected"; break;

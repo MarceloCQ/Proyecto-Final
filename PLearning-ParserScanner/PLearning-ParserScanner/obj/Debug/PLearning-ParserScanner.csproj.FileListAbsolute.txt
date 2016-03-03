@@ -1,0 +1,5 @@
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-ParserScanner\PLearning-ParserScanner\bin\Debug\PLearning-ParserScanner.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-ParserScanner\PLearning-ParserScanner\bin\Debug\PLearning-ParserScanner.pdb
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-ParserScanner\PLearning-ParserScanner\obj\Debug\PLearning-ParserScanner.csprojResolveAssemblyReference.cache
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-ParserScanner\PLearning-ParserScanner\obj\Debug\PLearning-ParserScanner.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-ParserScanner\PLearning-ParserScanner\obj\Debug\PLearning-ParserScanner.pdb

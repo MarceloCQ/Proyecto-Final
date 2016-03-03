@@ -6,7 +6,7 @@ MAIN = void main "(" ")" "{" {VARS} { ESTATUTO } "}".
 REGRESA = (TIPO | void).
 TIPO = (int | float | string | bool | char).
 ARREGLOS = TIPO "[" "cte.entera" "]" id {"," id} ";".
-BLOQUE = "{" {VARS} {ESTATUTO} [return EXPRESION ";"] "}".
+BLOQUE = "{" {VARS} {ESTATUTO} "}".
 MATRICES = TIPO "[" "cte.entera" "," "cte.entera" "]" id {"," id} ";".
 WHILE = while "(" EXPRESION ")" BLOQUE.
 FOR = for "(" id "=" EXPRESION ";" EXPRESION ";" EXPRESION ")" BLOQUE.
