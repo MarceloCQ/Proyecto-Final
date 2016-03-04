@@ -1,6 +1,25 @@
 program Marcelo;
-int x, y, z = 4;
-float v, x = 4.5;
+
+function int cuenta (int uno[], float dos)
+{
+	int x, y, z = 4;
+	float v, x = 4.5;
+	int [5,4] c;
+	x = y + (z * 19);
+	y = readLine();
+
+	return x+y;
+	
+}
+
+function void dos (string lol, char x)
+{
+
+	lol = readLine();
+	x = 'l';
+
+}
+
 void main()
 {
 	int x, y, z = 4;
@@ -23,7 +42,7 @@ void main()
 	else
 	{
 		uno(x, y);
-		dos(z, y);
+		dos("juan", 'c');
 
 		x = uno(x, y);
 
