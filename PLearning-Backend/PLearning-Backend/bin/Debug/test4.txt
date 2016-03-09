@@ -1,0 +1,51 @@
+program Marcelo;
+
+function int cuenta (int uno[], float dos)
+{
+	int x, y, z = 4;
+	float v, x = 4.5;
+	int [5,4] c;
+	x = y + (z * 19);
+	y = readLine();
+
+	return x+y;
+	
+}
+
+function void dos (string lol, char x)
+{
+
+	lol = readLine();
+	x = 'l';
+
+}
+
+void main()
+{
+	int x, y, z = 4;
+	float v, x = 4.5;
+	int [5,4,8] c;
+	if ("Hola" == variable)
+	{
+		while(x > 5 or x < 7 and x > 7)
+		{
+			x = 7;
+			for (x = 8; x < 10; x + 1)
+			{
+				print(x, y, z);
+			}
+		}	
+	
+	}
+	else
+	{
+		uno(x, y);
+		dos(z, y);
+
+		x = uno(x, y);
+
+	}
+
+
+	
+}

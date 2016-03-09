@@ -1,3 +1,8 @@
+using PLearning_Backend.Model;
+using System.Collections.Generic;
+using PLearning_Backend.Enumerations;
+
+
 
 using System;
 
@@ -61,6 +66,12 @@ public class Parser {
 	public Token la;   // lookahead token
 	int errDist = minErrDist;
 
+Dictionary<string, Procedure> procedureTable;
+	Procedure actualProcedure;
+	DataType tipoActual;
+
+
+/*--------------------------------------------------------------------------*/
 
 
 	public Parser(Scanner scanner) {
@@ -122,7 +133,11 @@ public class Parser {
 	
 	void PLearning() {
 		Expect(6);
+		procedureTable = new Dictionary<string, Procedure>(); 
 		Expect(1);
+		actualProcedure = new Procedure(t.val, ReturnType.Program);
+		procedureTable.Add(t.val, actualProcedure);   
+		
 		Expect(27);
 		while (StartOf(1)) {
 			vars();
@@ -135,11 +150,31 @@ public class Parser {
 
 	void vars() {
 		tipo();
+		tipoActual = Variable.toDataType(t.val); 
+		
 		if (la.kind == 1) {
 			Get();
+			if (actualProcedure.VariableTable.ContainsKey(t.val))
+			{
+			SemErr("Variable previamente declarada");
+			}
+			else
+			{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			}
+			
 			while (la.kind == 28) {
 				Get();
 				Expect(1);
+				if (actualProcedure.VariableTable.ContainsKey(t.val))
+				{
+				SemErr("Variable previamente declarada");
+				}
+				else
+				{
+				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+				} 
+				
 			}
 			if (la.kind == 29) {
 				Get();
@@ -161,9 +196,27 @@ public class Parser {
 			}
 			Expect(35);
 			Expect(1);
+			if (actualProcedure.VariableTable.ContainsKey(t.val))
+			{
+			SemErr("Variable previamente declarada");
+			}
+			else
+			{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			}
+			
 			while (la.kind == 28) {
 				Get();
 				Expect(1);
+				if (actualProcedure.VariableTable.ContainsKey(t.val))
+				{
+				SemErr("Variable previamente declarada");
+				}
+				else
+				{
+				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+				}
+				
 			}
 			Expect(27);
 		} else SynErr(46);
@@ -172,7 +225,12 @@ public class Parser {
 	void funcion() {
 		Expect(23);
 		regresa();
+		ReturnType retType = Procedure.toReturnType(t.val);
+		
 		Expect(1);
+		actualProcedure = new Procedure(t.val, retType);
+		procedureTable.Add(t.val, actualProcedure);
+		
 		Expect(30);
 		if (StartOf(2)) {
 			parametro();
@@ -200,6 +258,9 @@ public class Parser {
 	void main() {
 		Expect(8);
 		Expect(7);
+		actualProcedure = new Procedure("main", ReturnType.Main);
+		procedureTable.Add("main", actualProcedure);
+		
 		Expect(30);
 		Expect(31);
 		Expect(32);
@@ -263,7 +324,18 @@ public class Parser {
 			Get();
 		}
 		tipo();
+		DataType type = Variable.toDataType(t.val);
+		
 		Expect(1);
+		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+		SemErr("Variable previamente declarada");
+		}
+		else
+		{
+		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type));
+		}
+		
 		if (la.kind == 34) {
 			Get();
 			Expect(35);

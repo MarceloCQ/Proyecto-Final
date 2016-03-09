@@ -1,0 +1,12 @@
+program Marcelo;
+
+void main()
+{
+	
+	if (x > 45) 
+	{
+		
+	};
+
+	
+}

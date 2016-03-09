@@ -1,5 +1,14 @@
+using PLearning_Backend.Model;
+using System.Collections.Generic;
+using PLearning_Backend.Enumerations;
+
 COMPILER PLearning
-  
+ 
+	Dictionary<string, Procedure> procedureTable;
+	Procedure actualProcedure;
+	DataType tipoActual;
+
+
 /*--------------------------------------------------------------------------*/
 CHARACTERS
 	letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
@@ -63,31 +72,141 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 /*------------------------------------------------------------------------*/
-PLearning = PROGRAM ID PYC {vars} {funcion} main.
-vars = tipo ( ID {COMA ID } [IGUAL (ctelet | ctenum | ctebool)] PYC | CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI ID {COMA ID} PYC ).
-funcion = FUNCTION regresa ID PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
-main = VOID MAIN PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI .
+PLearning = PROGRAM (. procedureTable = new Dictionary<string, Procedure>(); .)
+ ID
+ 	(. 
+ 		actualProcedure = new Procedure(t.val, ReturnType.Program);
+ 		procedureTable.Add(t.val, actualProcedure);   
+	.) 
+PYC {vars} {funcion} main.
+
+vars = tipo
+	(. 
+ 		tipoActual = Variable.toDataType(t.val); 
+ 	.)
+(ID 
+	(.
+		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Error - Variable " + t.val + " previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+		}
+  	.)
+{COMA ID
+ 	(.
+ 		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Error - Variable '" + t.val + "' previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+		} 
+	.)
+ } [IGUAL (ctelet | ctenum | ctebool)] PYC | CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI 
+ ID
+  (.
+		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Error - Variable '" + t.val + "' previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+		}
+  	.)
+{COMA ID
+	(.
+		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Error - Variable '" + t.val + "' previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+		}
+  	.)
+} PYC ).
+
+funcion = FUNCTION regresa
+	(.
+		ReturnType retType = Procedure.toReturnType(t.val);
+	.)
+ID 
+	(.
+		actualProcedure = new Procedure(t.val, retType);
+		procedureTable.Add(t.val, actualProcedure);
+	.) 
+PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
+
+main = VOID MAIN 
+	(.
+		actualProcedure = new Procedure("main", ReturnType.Main);
+		procedureTable.Add("main", actualProcedure);
+	.)
+PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI .
+
 regresa = (tipo | VOID).
+
 tipo = (INT | FLOAT | STRING | BOOL | CHAR).
+
 bloque = LLAVEAB {estatuto} LLAVECI .
+
 ciclowhile = WHILE PARAB expresion PARCI bloque.
+
 ciclofor = FOR PARAB ID IGUAL expresion PYC expresion PYC expresion PARCI bloque.
+
 ciclos = (ciclowhile | ciclofor).
+
 condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
+
 estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
+
 lectura = READLINE PARAB PARCI.
+
 escritura = PRINT PARAB expresion { COMA expresion } PARCI PYC.
+
 asignacionollamada = ID ([cuantificador] IGUAL (expresion | lectura) | PARAB [expresion {COMA expresion }] PARCI) PYC.
+
 ctelet = (CTESTRING | CTECHAR).
+
 ctebool = (TRUE | FALSE).
+
 ctenum = (CTEENTERA | CTEFLOAT).
+
 cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
-parametro = [REF] tipo ID [ CORCHAB CORCHCI].
+
+parametro = [REF] tipo
+	(.
+		DataType type = Variable.toDataType(t.val);
+	.)
+ ID 
+ 	(.
+ 		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Variable previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type));
+		}
+ 	.)
+
+ [ CORCHAB CORCHCI ].
+
 expresion = comparacion {(AND | OR) comparacion}.
+
 comparacion = exp [(MAQUE | MEQUE | DIFERENTE | COMPARACION) exp].
+
 exp = term {(MAS | MENOS) term}.
+
 term = factor {(MULT | DIV) factor}.
+
 factor = PARAB expresion PARCI | [MAS | MENOS] ctevar.
+
 ctevar = (ctelet | ctebool | ctenum | ID [ (PARAB [expresion {COMA expresion }] PARCI | cuantificador ) ] ).
 
 
