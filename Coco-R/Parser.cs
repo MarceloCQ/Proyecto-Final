@@ -228,8 +228,16 @@ Dictionary<string, Procedure> procedureTable;
 		ReturnType retType = Procedure.toReturnType(t.val);
 		
 		Expect(1);
+		if (procedureTable.ContainsKey(t.val))
+		{
+		SemErr("Error - Funcion '" + t.val + "' previamente declarada");
+		}
+		else
+		{
 		actualProcedure = new Procedure(t.val, retType);
 		procedureTable.Add(t.val, actualProcedure);
+		}
+		
 		
 		Expect(30);
 		if (StartOf(2)) {

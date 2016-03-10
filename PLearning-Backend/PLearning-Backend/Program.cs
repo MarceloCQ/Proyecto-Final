@@ -26,10 +26,6 @@ namespace PLearning_Backend
                 Console.WriteLine("Se encontraron " + parser.errors.count + " errores.");
             }
 
-            Dictionary<string, Procedure> procedureTable = new Dictionary<string, Procedure>();
-            
-
-
             Console.ReadLine();
         }
     }

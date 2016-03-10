@@ -3,7 +3,7 @@ program Marcelo;
 function int cuenta (int uno[], float dos)
 {
 	int x, y, z = 4;
-	float v, x = 4.5;
+	float v, u = 4.5;
 	int [5,4] c;
 	x = y + (z * 19);
 	y = readLine();
@@ -12,7 +12,7 @@ function int cuenta (int uno[], float dos)
 	
 }
 
-function void dos (string lol, char x)
+function int cuenta (string lol, char x)
 {
 
 	lol = readLine();
@@ -23,8 +23,8 @@ function void dos (string lol, char x)
 void main()
 {
 	int x, y, z = 4;
-	float v, x = 4.5;
-	int [5,4 c;
+	float v, t = 4.5;
+	int [5,4] c;
 
 	x = a[4] + uno(x) + 7;
 	if ("Hola" == variable)
@@ -42,7 +42,7 @@ void main()
 	else
 	{
 		uno(x, y);
-		dos(z, y);
+		dos("juan", 'c');
 
 		x = uno(x, y);
 

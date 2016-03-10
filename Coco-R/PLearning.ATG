@@ -137,8 +137,16 @@ funcion = FUNCTION regresa
 	.)
 ID 
 	(.
-		actualProcedure = new Procedure(t.val, retType);
-		procedureTable.Add(t.val, actualProcedure);
+		if (procedureTable.ContainsKey(t.val))
+		{
+			SemErr("Error - Funcion '" + t.val + "' previamente declarada");
+		}
+		else
+		{
+			actualProcedure = new Procedure(t.val, retType);
+			procedureTable.Add(t.val, actualProcedure);
+		}
+		
 	.) 
 PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
 
