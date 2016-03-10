@@ -1,0 +1,31 @@
+program zyanya;
+
+function string screamDramatically()
+{
+	return "Nooooooooooooooo";
+}
+
+void main ()
+{	
+	int screamOne;
+	int screamTwo = 2;
+	int screamThree = 3;
+	int screamThree = 3;
+
+	for (screamOne = 0; screamOne < 1; screamOne + 1)
+	{
+		print(screamDramatically());
+	}
+	
+	while (screamTwo > 0)
+	{
+		print(screamDramatically());
+		screamTwo = screamTwo - 1;
+	}
+
+	while (screamThree > 0)
+	{
+		print (screamDramatically());
+		screamThree = screamThree - 1;
+	}
+}

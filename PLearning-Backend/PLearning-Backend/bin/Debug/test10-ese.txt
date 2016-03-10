@@ -1,0 +1,35 @@
+program zyanya;
+
+function void getPregnant(bool evilBaby)
+{
+	if (evilBaby)
+	{
+		print("Ohno");
+	}
+	else
+	{
+		print("Ohyes");
+	}
+}
+
+function string fallInLove(string husband)
+{
+	string husband;
+	return husband;
+}
+
+void main ()
+{
+	bool inLove = true;
+	int auxiliar = 0;
+	string husband;
+	
+	husband = fallInLove("Luke");
+	if (husband == "Luke")
+	{
+		while (auxiliar < 1){
+			getPregnant(true);
+			auxiliar = auxiliar + 1;
+		}
+	}
+}

@@ -1,0 +1,43 @@
+program zyanya;
+
+function void cutHand(string cutter, string cuttee)
+{
+	string cutter = "";	
+	int orphanLuke;
+	if (cuttee == "Luke")
+	{
+		print("SingleHandedLuke");	
+	}
+	else
+	{
+		print("Goodcallmyyoungpadawan");
+	}
+}
+
+function void cutHand()
+{
+}
+
+void main ()
+{
+	bool orphanLuke;
+	bool orphanLuke;
+	string luke = "Luke";
+	string darthVader = "Father";
+	readline();
+	for (bb8 = 8; bb8 < 10; bb8 + 2){
+		r2d2 = bb8 + 2;
+	}
+
+	cutHand(darthVader, luke);
+	int orphanLuke;
+
+	if (darthVader == "Father")
+	{	
+		print("NOOOOOOOO");
+		orphanLuke = false;
+	} else
+	{
+		orphanLuke = true;
+	}
+}

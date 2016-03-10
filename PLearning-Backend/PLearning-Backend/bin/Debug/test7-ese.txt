@@ -1,0 +1,29 @@
+program zyanya;
+
+function void jediTest()
+{
+	int bb8;
+	i = i + 1;
+
+	for (bb8 = 8; bb8 < 10; bb8 + 2){
+		int bb8;
+		r2d2 = bb8 + 2;
+	}
+}
+
+void main ()
+{
+	bool orphanLuke;
+	string darthVader = "Father";
+
+	readline();
+
+	if (darthVader == "Father")
+	{	
+		print("NOOOOOOOO");
+		orphanLuke = false;
+	} else
+	{
+		orphanLuke = true;
+	}
+}
