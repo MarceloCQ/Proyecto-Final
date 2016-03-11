@@ -6,7 +6,7 @@ COMPILER PLearning
  
 	Dictionary<string, Procedure> procedureTable;
 	Procedure actualProcedure;
-	DataType tipoActual;
+	int tipoActual;
 
 
 /*--------------------------------------------------------------------------*/
@@ -133,7 +133,7 @@ vars = tipo
 
 funcion = FUNCTION regresa
 	(.
-		ReturnType retType = Procedure.toReturnType(t.val);
+		int retType = Procedure.toReturnType(t.val);
 	.)
 ID 
 	(.
@@ -189,7 +189,7 @@ cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
 
 parametro = [REF] tipo
 	(.
-		DataType type = Variable.toDataType(t.val);
+		int type = Variable.toDataType(t.val);
 	.)
  ID 
  	(.

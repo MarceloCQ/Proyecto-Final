@@ -5,25 +5,25 @@ using System.Text;
 
 namespace PLearning_Backend.Enumerations
 {
-    enum DataType
+    public static class DataType
     {
-        Int,
-        Float,
-        String,
-        Bool,
-        Char
+        public static int Int = 0;
+        public static int Float = 1;
+        public static int String = 2;
+        public static int Bool = 3;
+        public static int Char = 4;
     }
 
-    enum ReturnType
+    public static class ReturnType
     {
-        Int,
-        Float,
-        String,
-        Bool,
-        Char,
-        Void,
-        Program,
-        Main
+        public static int Int = 0;
+        public static int Float = 1;
+        public static int String = 2;
+        public static int Bool = 3;
+        public static int Char = 4;
+        public static int Void = 5;
+        public static int Program = 6;
+        public static int Main = 7;
     }
 
     

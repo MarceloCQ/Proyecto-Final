@@ -68,7 +68,7 @@ public class Parser {
 
 Dictionary<string, Procedure> procedureTable;
 	Procedure actualProcedure;
-	DataType tipoActual;
+	int tipoActual;
 
 
 /*--------------------------------------------------------------------------*/
@@ -225,7 +225,7 @@ Dictionary<string, Procedure> procedureTable;
 	void funcion() {
 		Expect(23);
 		regresa();
-		ReturnType retType = Procedure.toReturnType(t.val);
+		int retType = Procedure.toReturnType(t.val);
 		
 		Expect(1);
 		if (procedureTable.ContainsKey(t.val))
@@ -332,7 +332,7 @@ Dictionary<string, Procedure> procedureTable;
 			Get();
 		}
 		tipo();
-		DataType type = Variable.toDataType(t.val);
+		int type = Variable.toDataType(t.val);
 		
 		Expect(1);
 		if (actualProcedure.VariableTable.ContainsKey(t.val))

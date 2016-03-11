@@ -9,15 +9,15 @@ namespace PLearning_Backend.Model
     class Variable
     {
         public string Name { get; set; }
-        public DataType Type { get; set; }
+        public int Type { get; set; }
 
-        public Variable (string name, DataType type)
+        public Variable (string name, int type)
         {
             Name = name;
             Type = type;
         }
 
-        public static DataType toDataType(string dataType)
+        public static int toDataType(string dataType)
         {
             switch (dataType)
             {
@@ -32,7 +32,7 @@ namespace PLearning_Backend.Model
                 case "string":
                     return DataType.String;
                 default:
-                    return DataType.String;
+                    return -1;
             }
         }
 
