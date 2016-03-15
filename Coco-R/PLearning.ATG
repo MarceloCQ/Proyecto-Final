@@ -1,12 +1,69 @@
 using PLearning_Backend.Model;
 using System.Collections.Generic;
 using PLearning_Backend.Enumerations;
+using PLearning_Backend.Structures;
 
 COMPILER PLearning
  
 	Dictionary<string, Procedure> procedureTable;
 	Procedure actualProcedure;
 	int tipoActual;
+	int scopeActual = VirtualStructure.VariableType.Global;
+	string programID;
+
+	Stack<int> POper = new Stack<int>();
+	Stack<int> PilaOperandos = new Stack<int>();
+	Stack<int> PTipos = new Stack<int>();
+
+	List<Quadruple> quadruples = new List<Quadruple>();
+
+	private void tryToGenerateQuadruple()
+	{
+		int operat = POper.Pop();
+		int operand2 = PilaOperandos.Pop();
+		int tipo2 = PTipos.Pop();
+		int operand1 = PilaOperandos.Pop();
+		int tipo1 = PTipos.Pop();
+
+		int newType = SemanticCube.getCombiningType(tipo1, tipo2, operat);
+
+		if (newType != 0)
+		{
+			int temp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, newType);				 
+			Quadruple qAux = new Quadruple(operat, operand1, operand2, temp);
+			quadruples.Add(qAux);
+			PilaOperandos.Push(temp);
+			PTipos.Push(newType);
+		}
+		else
+		{
+			SemErr("Error - Tipos incompatibles");
+		}
+	}
+
+	private void tryToInsertVariable()
+	{
+		if (!actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			if (!procedureTable[programID].VariableTable.ContainsKey(t.val))
+			{
+				SemErr("Variable no declarada");
+			}
+			else
+			{
+				Variable v = procedureTable[programID].VariableTable[t.val];
+				PilaOperandos.Push(v.VirtualDir);
+				PTipos.Push(v.Type);
+			}
+			
+		}
+		else
+		{
+			Variable v = actualProcedure.VariableTable[t.val];
+			PilaOperandos.Push(v.VirtualDir);
+			PTipos.Push(v.Type);
+		}
+	}
 
 
 /*--------------------------------------------------------------------------*/
@@ -72,17 +129,27 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 /*------------------------------------------------------------------------*/
-PLearning = PROGRAM (. procedureTable = new Dictionary<string, Procedure>(); .)
+/*---------------------------------------------- PLEARNING ---------------------------------------------- */
+PLearning = PROGRAM
+	(. 
+		procedureTable = new Dictionary<string, Procedure>(); 
+	.)
  ID
  	(. 
  		actualProcedure = new Procedure(t.val, ReturnType.Program);
  		procedureTable.Add(t.val, actualProcedure);   
+ 		programID = t.val;
 	.) 
-PYC {vars} {funcion} main.
+PYC {vars}
+	(.
+		scopeActual = VirtualStructure.VariableType.Local; 
+	.)
+ {funcion} main.
 
+/*---------------------------------------------- VARS ---------------------------------------------- */
 vars = tipo
 	(. 
- 		tipoActual = Variable.toDataType(t.val); 
+ 		tipoActual = DataType.toDataType(t.val); 
  	.)
 (ID 
 	(.
@@ -92,7 +159,7 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 		}
   	.)
 {COMA ID
@@ -103,7 +170,7 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 		} 
 	.)
  } [IGUAL (ctelet | ctenum | ctebool)] PYC | CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI 
@@ -115,7 +182,7 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 		}
   	.)
 {COMA ID
@@ -126,14 +193,16 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 		}
   	.)
 } PYC ).
 
+
+/*---------------------------------------------- FUNCION ---------------------------------------------- */
 funcion = FUNCTION regresa
 	(.
-		int retType = Procedure.toReturnType(t.val);
+		int retType = ReturnType.toReturnType(t.val);
 	.)
 ID 
 	(.
@@ -150,6 +219,7 @@ ID
 	.) 
 PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
 
+/*---------------------------------------------- MAIN ---------------------------------------------- */
 main = VOID MAIN 
 	(.
 		actualProcedure = new Procedure("main", ReturnType.Main);
@@ -157,39 +227,75 @@ main = VOID MAIN
 	.)
 PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI .
 
+/*---------------------------------------------- REGRESA ---------------------------------------------- */
 regresa = (tipo | VOID).
 
+/*---------------------------------------------- TIPO ---------------------------------------------- */
 tipo = (INT | FLOAT | STRING | BOOL | CHAR).
 
+/*---------------------------------------------- BLOQUE ---------------------------------------------- */
 bloque = LLAVEAB {estatuto} LLAVECI .
 
+/*---------------------------------------------- CICLOWHILE ---------------------------------------------- */
 ciclowhile = WHILE PARAB expresion PARCI bloque.
 
+/*---------------------------------------------- CICLOFOR ---------------------------------------------- */
 ciclofor = FOR PARAB ID IGUAL expresion PYC expresion PYC expresion PARCI bloque.
 
+/*---------------------------------------------- CICLOS ---------------------------------------------- */
 ciclos = (ciclowhile | ciclofor).
 
+/*---------------------------------------------- CONDICION ---------------------------------------------- */
 condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
 
+/*---------------------------------------------- ESTATUTO ---------------------------------------------- */
 estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
 
+/*---------------------------------------------- LECTURA ---------------------------------------------- */
 lectura = READLINE PARAB PARCI.
 
-escritura = PRINT PARAB expresion { COMA expresion } PARCI PYC.
+/*---------------------------------------------- ESCRITURA ---------------------------------------------- */
+escritura = PRINT PARAB expresion
+	(.
+		int resExp = PilaOperandos.Pop();
+		Quadruple qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
+		quadruples.Add(qAux);
+	.)
 
-asignacionollamada = ID ([cuantificador] IGUAL (expresion | lectura) | PARAB [expresion {COMA expresion }] PARCI) PYC.
+ { COMA expresion
+	(.
+		resExp = PilaOperandos.Pop();
+		qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
+		quadruples.Add(qAux);
+	.)
+  } PARCI PYC.
 
-ctelet = (CTESTRING | CTECHAR).
+/*---------------------------------------------- ASIGNACIONOLLAMADA ---------------------------------------------- */
+asignacionollamada = ID (
+	(.
+		tryToInsertVariable();
+	.)
+[cuantificador] IGUAL
+	(.
+		POper.Push(OperationCode.Assignment);
+	.)
+ (expresion 
+ 	(.
+ 		int ladoDer = PilaOperandos.Pop();
+ 		int ladoIzq = PilaOperandos.Pop();
+ 		int asigna = POper.Pop();
+ 		Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+ 		quadruples.Add(qAux);
+	.)
+ 	| lectura) | PARAB [expresion {COMA expresion }] PARCI) PYC.
 
-ctebool = (TRUE | FALSE).
-
-ctenum = (CTEENTERA | CTEFLOAT).
-
+/*---------------------------------------------- CUANTIFICADOR ---------------------------------------------- */
 cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
 
+/*---------------------------------------------- PARAMETRO ---------------------------------------------- */
 parametro = [REF] tipo
 	(.
-		int type = Variable.toDataType(t.val);
+		int type = DataType.toDataType(t.val);
 	.)
  ID 
  	(.
@@ -199,23 +305,151 @@ parametro = [REF] tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
 		}
  	.)
 
  [ CORCHAB CORCHCI ].
 
-expresion = comparacion {(AND | OR) comparacion}.
+/*---------------------------------------------- EXPRESION ---------------------------------------------- */
+expresion = comparacion
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
+{(AND | OR) 
+	(.
+		POper.Push(OperationCode.toOperationCode(t.val));
+	.)
+comparacion
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
+}.
 
-comparacion = exp [(MAQUE | MEQUE | DIFERENTE | COMPARACION) exp].
+/*---------------------------------------------- COMPARACION ---------------------------------------------- */
+comparacion = exp [(MAQUE | MEQUE | DIFERENTE | COMPARACION) 
+	(.
+		POper.Push(OperationCode.toOperationCode(t.val));
+	.)
+exp
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.MoreThan || POper.Peek() == OperationCode.LessThan || POper.Peek() == OperationCode.Different || POper.Peek() == OperationCode.EqualComparison))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
+].
 
-exp = term {(MAS | MENOS) term}.
+/*---------------------------------------------- EXP ---------------------------------------------- */
+exp = term
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
 
-term = factor {(MULT | DIV) factor}.
+ {(MAS | MENOS) 
+	(.
+		POper.Push(OperationCode.toOperationCode(t.val));
+	.)	
+	term
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
+	}.
 
-factor = PARAB expresion PARCI | [MAS | MENOS] ctevar.
+/*---------------------------------------------- TERM ---------------------------------------------- */
+term = factor
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
+{(MULT | DIV) 
+	(.
+		POper.Push(OperationCode.toOperationCode(t.val));
+	.)
+factor
+	(.
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
+		{
+			tryToGenerateQuadruple();
+		}
+	.)
 
-ctevar = (ctelet | ctebool | ctenum | ID [ (PARAB [expresion {COMA expresion }] PARCI | cuantificador ) ] ).
+}.
+
+/*---------------------------------------------- FACTOR ---------------------------------------------- */
+factor = PARAB
+	(.
+		POper.Push(-1);
+	.)
+ expresion PARCI
+ 	(.
+ 		POper.Pop();
+	.)
+  | [MAS | MENOS] ctevar.
+
+/*---------------------------------------------- CTEVAR ---------------------------------------------- */
+ctevar = (ctelet | ctebool | ctenum | ID
+	(.
+		string id = t.val;
+	.)
+ (PARAB [expresion {COMA expresion }] PARCI | cuantificador |
+	(.
+		tryToInsertVariable();
+	.)
+ ) ).
+
+/*---------------------------------------------- CTELET ---------------------------------------------- */
+ctelet = (CTESTRING
+	(.
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.String);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.String);
+	.)
+ | CTECHAR
+	(.
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Char);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.Char);
+	.)
+ ).
+
+/*---------------------------------------------- CTEBOOL ---------------------------------------------- */
+ctebool = (TRUE | FALSE) 
+	(.
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Bool);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.Bool);
+	.)
+.
+
+/*---------------------------------------------- CTENUM ---------------------------------------------- */
+ctenum = (CTEENTERA 
+	(.
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Int);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.Int);
+	.)
+| CTEFLOAT
+	(.
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Float);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.Float);
+	.)
+).
 
 
 /*------------------------------------------------------------------------*/

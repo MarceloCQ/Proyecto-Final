@@ -19,26 +19,7 @@ namespace PLearning_Backend.Model
             VariableTable = new Dictionary<string, Variable>();
         }
 
-        public static int toReturnType(string returnType)
-        {
-            switch (returnType)
-            {
-                case "int":
-                    return ReturnType.Int;
-                case "float":
-                    return ReturnType.Float;
-                case "char":
-                    return ReturnType.Char;
-                case "bool":
-                    return ReturnType.Bool;
-                case "string":
-                    return ReturnType.String;
-                case "void":
-                    return ReturnType.Void;
-                default:
-                    return -1;
-            }
-        }
+        
 
     }
 }

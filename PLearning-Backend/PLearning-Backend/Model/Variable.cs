@@ -10,31 +10,16 @@ namespace PLearning_Backend.Model
     {
         public string Name { get; set; }
         public int Type { get; set; }
+        public int VirtualDir { get; set; }
 
-        public Variable (string name, int type)
+        public Variable (string name, int type, int virtualDir)
         {
             Name = name;
             Type = type;
+            VirtualDir = virtualDir;
         }
 
-        public static int toDataType(string dataType)
-        {
-            switch (dataType)
-            {
-                case "int":
-                    return DataType.Int;
-                case "float":
-                    return DataType.Float;
-                case "char":
-                    return DataType.Char;
-                case "bool":
-                    return DataType.Bool;
-                case "string":
-                    return DataType.String;
-                default:
-                    return -1;
-            }
-        }
+        
 
 
 

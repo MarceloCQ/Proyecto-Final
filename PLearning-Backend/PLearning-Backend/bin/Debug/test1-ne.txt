@@ -6,9 +6,10 @@ function int cuenta (int uno[], float dos)
 	int x, y, z = 4;
 	float v, pancho = 4.5;
 	int [5,4] c;
+	
 	x = y + (z * 19);
 	y = readLine();
-
+	p = p + j;
 	return x+y;
 	
 }
@@ -28,7 +29,7 @@ void main()
 	int [5,4] c;
 
 	x = a[4] + uno(x) + 7;
-	if ("Hola" == variable)
+	if ("Hola" == x)
 	{
 		while(x > 5 or x < 7 and x > 7)
 		{

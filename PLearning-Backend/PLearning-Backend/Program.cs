@@ -1,4 +1,5 @@
-﻿using PLearning_Backend.Model;
+﻿using PLearning_Backend.Enumerations;
+using PLearning_Backend.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,13 @@ namespace PLearning_Backend
     {
         static void Main(string[] args)
         {
+            
+
+            int[, ,] cuboSemantico = new int[6, 6, 10];
+
+           
+
+
             Console.Write("Nombre de archivo: ");
             string nombre = Console.ReadLine();
 

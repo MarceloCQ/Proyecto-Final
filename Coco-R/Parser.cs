@@ -1,6 +1,7 @@
 using PLearning_Backend.Model;
 using System.Collections.Generic;
 using PLearning_Backend.Enumerations;
+using PLearning_Backend.Structures;
 
 
 
@@ -69,6 +70,62 @@ public class Parser {
 Dictionary<string, Procedure> procedureTable;
 	Procedure actualProcedure;
 	int tipoActual;
+	int scopeActual = VirtualStructure.VariableType.Global;
+	string programID;
+
+	Stack<int> POper = new Stack<int>();
+	Stack<int> PilaOperandos = new Stack<int>();
+	Stack<int> PTipos = new Stack<int>();
+
+	List<Quadruple> quadruples = new List<Quadruple>();
+
+	private void tryToGenerateQuadruple()
+	{
+		int operat = POper.Pop();
+		int operand2 = PilaOperandos.Pop();
+		int tipo2 = PTipos.Pop();
+		int operand1 = PilaOperandos.Pop();
+		int tipo1 = PTipos.Pop();
+
+		int newType = SemanticCube.getCombiningType(tipo1, tipo2, operat);
+
+		if (newType != 0)
+		{
+			int temp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, newType);				 
+			Quadruple qAux = new Quadruple(operat, operand1, operand2, temp);
+			quadruples.Add(qAux);
+			PilaOperandos.Push(temp);
+			PTipos.Push(newType);
+		}
+		else
+		{
+			SemErr("Error - Tipos incompatibles");
+		}
+	}
+
+	private void tryToInsertVariable()
+	{
+		if (!actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			if (!procedureTable[programID].VariableTable.ContainsKey(t.val))
+			{
+				SemErr("Variable no declarada");
+			}
+			else
+			{
+				Variable v = procedureTable[programID].VariableTable[t.val];
+				PilaOperandos.Push(v.VirtualDir);
+				PTipos.Push(v.Type);
+			}
+			
+		}
+		else
+		{
+			Variable v = actualProcedure.VariableTable[t.val];
+			PilaOperandos.Push(v.VirtualDir);
+			PTipos.Push(v.Type);
+		}
+	}
 
 
 /*--------------------------------------------------------------------------*/
@@ -134,14 +191,18 @@ Dictionary<string, Procedure> procedureTable;
 	void PLearning() {
 		Expect(6);
 		procedureTable = new Dictionary<string, Procedure>(); 
+		
 		Expect(1);
 		actualProcedure = new Procedure(t.val, ReturnType.Program);
 		procedureTable.Add(t.val, actualProcedure);   
+		programID = t.val;
 		
 		Expect(27);
 		while (StartOf(1)) {
 			vars();
 		}
+		scopeActual = VirtualStructure.VariableType.Local; 
+		
 		while (la.kind == 23) {
 			funcion();
 		}
@@ -150,7 +211,7 @@ Dictionary<string, Procedure> procedureTable;
 
 	void vars() {
 		tipo();
-		tipoActual = Variable.toDataType(t.val); 
+		tipoActual = DataType.toDataType(t.val); 
 		
 		if (la.kind == 1) {
 			Get();
@@ -160,7 +221,7 @@ Dictionary<string, Procedure> procedureTable;
 			}
 			else
 			{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 			}
 			
 			while (la.kind == 28) {
@@ -172,7 +233,7 @@ Dictionary<string, Procedure> procedureTable;
 				}
 				else
 				{
-				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 				} 
 				
 			}
@@ -202,7 +263,7 @@ Dictionary<string, Procedure> procedureTable;
 			}
 			else
 			{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 			}
 			
 			while (la.kind == 28) {
@@ -214,7 +275,7 @@ Dictionary<string, Procedure> procedureTable;
 				}
 				else
 				{
-				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual));
+				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 				}
 				
 			}
@@ -225,7 +286,7 @@ Dictionary<string, Procedure> procedureTable;
 	void funcion() {
 		Expect(23);
 		regresa();
-		int retType = Procedure.toReturnType(t.val);
+		int retType = ReturnType.toReturnType(t.val);
 		
 		Expect(1);
 		if (procedureTable.ContainsKey(t.val))
@@ -298,16 +359,32 @@ Dictionary<string, Procedure> procedureTable;
 	void ctelet() {
 		if (la.kind == 4) {
 			Get();
+			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.String);
+			PilaOperandos.Push(virtualDir);
+			PTipos.Push(DataType.String);
+			
 		} else if (la.kind == 5) {
 			Get();
+			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Char);
+			PilaOperandos.Push(virtualDir);
+			PTipos.Push(DataType.Char);
+			
 		} else SynErr(48);
 	}
 
 	void ctenum() {
 		if (la.kind == 2) {
 			Get();
+			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Int);
+			PilaOperandos.Push(virtualDir);
+			PTipos.Push(DataType.Int);
+			
 		} else if (la.kind == 3) {
 			Get();
+			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Float);
+			PilaOperandos.Push(virtualDir);
+			PTipos.Push(DataType.Float);
+			
 		} else SynErr(49);
 	}
 
@@ -317,6 +394,10 @@ Dictionary<string, Procedure> procedureTable;
 		} else if (la.kind == 25) {
 			Get();
 		} else SynErr(50);
+		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Bool);
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(DataType.Bool);
+		
 	}
 
 	void regresa() {
@@ -332,7 +413,7 @@ Dictionary<string, Procedure> procedureTable;
 			Get();
 		}
 		tipo();
-		int type = Variable.toDataType(t.val);
+		int type = DataType.toDataType(t.val);
 		
 		Expect(1);
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
@@ -341,7 +422,7 @@ Dictionary<string, Procedure> procedureTable;
 		}
 		else
 		{
-		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type));
+		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
 		}
 		
 		if (la.kind == 34) {
@@ -364,13 +445,25 @@ Dictionary<string, Procedure> procedureTable;
 
 	void expresion() {
 		comparacion();
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
+		{
+		tryToGenerateQuadruple();
+		}
+		
 		while (la.kind == 16 || la.kind == 17) {
 			if (la.kind == 16) {
 				Get();
 			} else {
 				Get();
 			}
+			POper.Push(OperationCode.toOperationCode(t.val));
+			
 			comparacion();
+			if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
+			{
+			tryToGenerateQuadruple();
+			}
+			
 		}
 	}
 
@@ -428,9 +521,17 @@ Dictionary<string, Procedure> procedureTable;
 		Expect(21);
 		Expect(30);
 		expresion();
+		int resExp = PilaOperandos.Pop();
+		Quadruple qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
+		quadruples.Add(qAux);
+		
 		while (la.kind == 28) {
 			Get();
 			expresion();
+			resExp = PilaOperandos.Pop();
+			qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
+			quadruples.Add(qAux);
+			
 		}
 		Expect(31);
 		Expect(27);
@@ -439,12 +540,22 @@ Dictionary<string, Procedure> procedureTable;
 	void asignacionollamada() {
 		Expect(1);
 		if (la.kind == 29 || la.kind == 34) {
+			tryToInsertVariable();
+			
 			if (la.kind == 34) {
 				cuantificador();
 			}
 			Expect(29);
+			POper.Push(OperationCode.Assignment);
+			
 			if (StartOf(4)) {
 				expresion();
+				int ladoDer = PilaOperandos.Pop();
+				int ladoIzq = PilaOperandos.Pop();
+				int asigna = POper.Pop();
+				Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+				quadruples.Add(qAux);
+				
 			} else if (la.kind == 22) {
 				lectura();
 			} else SynErr(54);
@@ -490,39 +601,74 @@ Dictionary<string, Procedure> procedureTable;
 			} else {
 				Get();
 			}
+			POper.Push(OperationCode.toOperationCode(t.val));
+			
 			exp();
+			if (POper.Count > 0 && (POper.Peek() == OperationCode.MoreThan || POper.Peek() == OperationCode.LessThan || POper.Peek() == OperationCode.Different || POper.Peek() == OperationCode.EqualComparison))
+			{
+			tryToGenerateQuadruple();
+			}
+			
 		}
 	}
 
 	void exp() {
 		term();
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
+		{
+		tryToGenerateQuadruple();
+		}
+		
 		while (la.kind == 36 || la.kind == 37) {
 			if (la.kind == 36) {
 				Get();
 			} else {
 				Get();
 			}
+			POper.Push(OperationCode.toOperationCode(t.val));
+			
 			term();
+			if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
+			{
+			tryToGenerateQuadruple();
+			}
+			
 		}
 	}
 
 	void term() {
 		factor();
+		if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
+		{
+		tryToGenerateQuadruple();
+		}
+		
 		while (la.kind == 38 || la.kind == 39) {
 			if (la.kind == 38) {
 				Get();
 			} else {
 				Get();
 			}
+			POper.Push(OperationCode.toOperationCode(t.val));
+			
 			factor();
+			if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
+			{
+			tryToGenerateQuadruple();
+			}
+			
 		}
 	}
 
 	void factor() {
 		if (la.kind == 30) {
 			Get();
+			POper.Push(-1);
+			
 			expresion();
 			Expect(31);
+			POper.Pop();
+			
 		} else if (StartOf(6)) {
 			if (la.kind == 36 || la.kind == 37) {
 				if (la.kind == 36) {
@@ -544,22 +690,25 @@ Dictionary<string, Procedure> procedureTable;
 			ctenum();
 		} else if (la.kind == 1) {
 			Get();
-			if (la.kind == 30 || la.kind == 34) {
-				if (la.kind == 30) {
-					Get();
-					if (StartOf(4)) {
+			string id = t.val;
+			
+			if (la.kind == 30) {
+				Get();
+				if (StartOf(4)) {
+					expresion();
+					while (la.kind == 28) {
+						Get();
 						expresion();
-						while (la.kind == 28) {
-							Get();
-							expresion();
-						}
 					}
-					Expect(31);
-				} else {
-					cuantificador();
 				}
-			}
-		} else SynErr(57);
+				Expect(31);
+			} else if (la.kind == 34) {
+				cuantificador();
+			} else if (StartOf(7)) {
+				tryToInsertVariable();
+				
+			} else SynErr(57);
+		} else SynErr(58);
 	}
 
 
@@ -580,7 +729,8 @@ Dictionary<string, Procedure> procedureTable;
 		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_T,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
 		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x},
 		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_T, _x,_x},
-		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x}
+		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _x,_x}
 
 	};
 } // end Parser
@@ -652,6 +802,7 @@ public class Errors {
 			case 55: s = "invalid asignacionollamada"; break;
 			case 56: s = "invalid factor"; break;
 			case 57: s = "invalid ctevar"; break;
+			case 58: s = "invalid ctevar"; break;
 
 			default: s = "error " + n; break;
 		}
