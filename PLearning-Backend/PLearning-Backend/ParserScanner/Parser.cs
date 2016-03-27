@@ -100,6 +100,7 @@ Dictionary<string, Procedure> procedureTable;
 		else
 		{
 			SemErr("Error - Tipos incompatibles");
+			finishExecution();
 		}
 	}
 
@@ -125,6 +126,12 @@ Dictionary<string, Procedure> procedureTable;
 			PilaOperandos.Push(v.VirtualDir);
 			PTipos.Push(v.Type);
 		}
+	}
+
+	private void finishExecution()
+	{
+		Console.ReadLine();
+		Environment.Exit(1);
 	}
 
 
@@ -550,15 +557,26 @@ Dictionary<string, Procedure> procedureTable;
 			
 			if (StartOf(4)) {
 				expresion();
-				int ladoDer = PilaOperandos.Pop();
-				int ladoIzq = PilaOperandos.Pop();
-				int asigna = POper.Pop();
-				Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
-				quadruples.Add(qAux);
-				
 			} else if (la.kind == 22) {
 				lectura();
 			} else SynErr(54);
+			int ladoDer = PilaOperandos.Pop();
+			int ladoIzq = PilaOperandos.Pop();
+			
+			int tipoDer = PTipos.Pop();
+			int tipoIzq = PTipos.Pop();
+			int asigna = POper.Pop();
+			
+			if (tipoDer == tipoIzq)
+			{			
+			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+			quadruples.Add(qAux);
+			}
+			else
+			{
+			SemErr("Error - Tipos no compatibles en asignaciÃ³n.");
+			}	
+			
 		} else if (la.kind == 30) {
 			Get();
 			if (StartOf(4)) {
@@ -575,6 +593,11 @@ Dictionary<string, Procedure> procedureTable;
 
 	void lectura() {
 		Expect(22);
+		int tempString = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.String);
+		PilaOperandos.Push(tempString);
+		PTipos.Push(DataType.String);
+		Quadruple qAux = new Quadruple(OperationCode.ReadLine, -1, -1, tempString);
+		
 		Expect(30);
 		Expect(31);
 	}

@@ -38,6 +38,7 @@ COMPILER PLearning
 		else
 		{
 			SemErr("Error - Tipos incompatibles");
+			finishExecution();
 		}
 	}
 
@@ -63,6 +64,12 @@ COMPILER PLearning
 			PilaOperandos.Push(v.VirtualDir);
 			PTipos.Push(v.Type);
 		}
+	}
+
+	private void finishExecution()
+	{
+		Console.ReadLine();
+		Environment.Exit(1);
 	}
 
 
@@ -252,7 +259,14 @@ condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
 estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
 
 /*---------------------------------------------- LECTURA ---------------------------------------------- */
-lectura = READLINE PARAB PARCI.
+lectura = READLINE 
+	(.
+		int tempString = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.String);
+		PilaOperandos.Push(tempString);
+		PTipos.Push(DataType.String);
+		Quadruple qAux = new Quadruple(OperationCode.ReadLine, -1, -1, tempString);
+	.)
+PARAB PARCI.
 
 /*---------------------------------------------- ESCRITURA ---------------------------------------------- */
 escritura = PRINT PARAB expresion
@@ -279,15 +293,26 @@ asignacionollamada = ID (
 	(.
 		POper.Push(OperationCode.Assignment);
 	.)
- (expresion 
- 	(.
+ (expresion | lectura) 
+(.
  		int ladoDer = PilaOperandos.Pop();
  		int ladoIzq = PilaOperandos.Pop();
+
+ 		int tipoDer = PTipos.Pop();
+ 		int tipoIzq = PTipos.Pop();
  		int asigna = POper.Pop();
- 		Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
- 		quadruples.Add(qAux);
-	.)
- 	| lectura) | PARAB [expresion {COMA expresion }] PARCI) PYC.
+
+ 		if (tipoDer == tipoIzq)
+ 		{			
+ 			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+ 			quadruples.Add(qAux);
+ 		}
+ 		else
+ 		{
+ 			SemErr("Error - Tipos no compatibles en asignación.");
+ 		}	
+.)
+ | PARAB [expresion {COMA expresion }] PARCI) PYC.
 
 /*---------------------------------------------- CUANTIFICADOR ---------------------------------------------- */
 cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.

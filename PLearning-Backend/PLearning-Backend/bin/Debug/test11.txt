@@ -1,9 +1,0 @@
-program Marcelo;
-int A, B, C;
-
-void main()
-{
-	int D, E, F, G, H, I, J;
-	A = A * (B * (C + D) / F * G - H) / I + J;
-	print(A, B, C);
-}

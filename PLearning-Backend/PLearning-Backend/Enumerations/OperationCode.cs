@@ -21,6 +21,7 @@ namespace PLearning_Backend.Enumerations
         public static int Goto = 11;
         public static int GotoF = 12;
         public static int Print = 13;
+        public static int ReadLine = 14;
 
         public static int toOperationCode(string operStr)
         {

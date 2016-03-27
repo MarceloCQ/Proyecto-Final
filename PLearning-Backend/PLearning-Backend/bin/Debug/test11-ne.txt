@@ -1,0 +1,14 @@
+program Marcelo;
+int A, B, C;
+
+void main()
+{
+	int D, E, F, G, H, I, J;
+	string l;
+	float Q;
+	string Z;
+	Q = A * (B * (C + D) / F * G - H) / I + J;
+	Z = readLine();
+	print(A, B, C);
+
+}
