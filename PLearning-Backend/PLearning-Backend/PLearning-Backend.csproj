@@ -43,6 +43,7 @@
     <Compile Include="Enumerations\DataType.cs" />
     <Compile Include="Enumerations\OperationCode.cs" />
     <Compile Include="Enumerations\ReturnType.cs" />
+    <Compile Include="Model\Constant.cs" />
     <Compile Include="Model\Procedure.cs" />
     <Compile Include="Model\Quadruple.cs" />
     <Compile Include="Model\Variable.cs" />

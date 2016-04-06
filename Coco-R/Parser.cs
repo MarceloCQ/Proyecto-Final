@@ -68,6 +68,8 @@ public class Parser {
 	int errDist = minErrDist;
 
 Dictionary<string, Procedure> procedureTable;
+	Dictionary<string, Constant> constantTable;
+
 	Procedure actualProcedure;
 	int tipoActual;
 	int scopeActual = VirtualStructure.VariableType.Global;
@@ -76,6 +78,7 @@ Dictionary<string, Procedure> procedureTable;
 	Stack<int> POper = new Stack<int>();
 	Stack<int> PilaOperandos = new Stack<int>();
 	Stack<int> PTipos = new Stack<int>();
+	Stack<int> PSaltos = new Stack<int>();
 
 	List<Quadruple> quadruples = new List<Quadruple>();
 
@@ -111,6 +114,7 @@ Dictionary<string, Procedure> procedureTable;
 			if (!procedureTable[programID].VariableTable.ContainsKey(t.val))
 			{
 				SemErr("Variable no declarada");
+				finishExecution();
 			}
 			else
 			{
@@ -126,6 +130,24 @@ Dictionary<string, Procedure> procedureTable;
 			PilaOperandos.Push(v.VirtualDir);
 			PTipos.Push(v.Type);
 		}
+	}
+
+	private void tryToInsertConstant(int dataType)
+	{
+		int virtualDir;
+		if (constantTable.ContainsKey(t.val))
+		{
+			virtualDir = constantTable[t.val].VirtualDir;
+		}
+		else
+		{
+			virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, dataType);
+			Constant c = new Constant(t.val, virtualDir);
+			constantTable.Add(t.val, c);
+		}
+		
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(dataType);
 	}
 
 	private void finishExecution()
@@ -197,7 +219,8 @@ Dictionary<string, Procedure> procedureTable;
 	
 	void PLearning() {
 		Expect(6);
-		procedureTable = new Dictionary<string, Procedure>(); 
+		procedureTable = new Dictionary<string, Procedure>();
+		constantTable = new Dictionary<string, Constant>(); 
 		
 		Expect(1);
 		actualProcedure = new Procedure(t.val, ReturnType.Program);
@@ -208,7 +231,9 @@ Dictionary<string, Procedure> procedureTable;
 		while (StartOf(1)) {
 			vars();
 		}
-		scopeActual = VirtualStructure.VariableType.Local; 
+		scopeActual = VirtualStructure.VariableType.Local;
+		PSaltos.Push(quadruples.Count);
+		quadruples.Add(new Quadruple(OperationCode.Goto, -1, -1, -1)); 
 		
 		while (la.kind == 23) {
 			funcion();
@@ -218,6 +243,7 @@ Dictionary<string, Procedure> procedureTable;
 
 	void vars() {
 		tipo();
+		List<int> registros = new List<int>();
 		tipoActual = DataType.toDataType(t.val); 
 		
 		if (la.kind == 1) {
@@ -228,7 +254,10 @@ Dictionary<string, Procedure> procedureTable;
 			}
 			else
 			{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
+			int virtualDir = VirtualStructure.getNext(scopeActual, tipoActual);
+			registros.Add(virtualDir);
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, virtualDir));
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, tipoActual);
 			}
 			
 			while (la.kind == 28) {
@@ -240,7 +269,10 @@ Dictionary<string, Procedure> procedureTable;
 				}
 				else
 				{
-				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
+				int virtualDir = VirtualStructure.getNext(scopeActual, tipoActual);
+				registros.Add(virtualDir);
+				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, virtualDir));
+				actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, tipoActual);
 				} 
 				
 			}
@@ -253,8 +285,13 @@ Dictionary<string, Procedure> procedureTable;
 				} else if (la.kind == 24 || la.kind == 25) {
 					ctebool();
 				} else SynErr(45);
+				foreach (int r in registros)
+				{
+				quadruples.Add(new Quadruple(OperationCode.Assignment, constantTable[t.val].VirtualDir, -1, r));
+				}
+				
+				
 			}
-			Expect(27);
 		} else if (la.kind == 34) {
 			Get();
 			Expect(2);
@@ -286,8 +323,8 @@ Dictionary<string, Procedure> procedureTable;
 				}
 				
 			}
-			Expect(27);
 		} else SynErr(46);
+		Expect(27);
 	}
 
 	void funcion() {
@@ -317,6 +354,8 @@ Dictionary<string, Procedure> procedureTable;
 		}
 		Expect(31);
 		Expect(32);
+		actualProcedure.InitialDir = quadruples.Count;
+		
 		while (StartOf(1)) {
 			vars();
 		}
@@ -340,6 +379,11 @@ Dictionary<string, Procedure> procedureTable;
 		Expect(30);
 		Expect(31);
 		Expect(32);
+		actualProcedure.InitialDir = quadruples.Count;
+		int got = PSaltos.Pop();
+		quadruples[got].TemporalRegorJump = quadruples.Count;
+		
+		
 		while (StartOf(1)) {
 			vars();
 		}
@@ -366,15 +410,11 @@ Dictionary<string, Procedure> procedureTable;
 	void ctelet() {
 		if (la.kind == 4) {
 			Get();
-			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.String);
-			PilaOperandos.Push(virtualDir);
-			PTipos.Push(DataType.String);
+			tryToInsertConstant(DataType.String);
 			
 		} else if (la.kind == 5) {
 			Get();
-			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Char);
-			PilaOperandos.Push(virtualDir);
-			PTipos.Push(DataType.Char);
+			tryToInsertConstant(DataType.Char);
 			
 		} else SynErr(48);
 	}
@@ -382,15 +422,11 @@ Dictionary<string, Procedure> procedureTable;
 	void ctenum() {
 		if (la.kind == 2) {
 			Get();
-			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Int);
-			PilaOperandos.Push(virtualDir);
-			PTipos.Push(DataType.Int);
+			tryToInsertConstant(DataType.Int);
 			
 		} else if (la.kind == 3) {
 			Get();
-			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Float);
-			PilaOperandos.Push(virtualDir);
-			PTipos.Push(DataType.Float);
+			tryToInsertConstant(DataType.Int);
 			
 		} else SynErr(49);
 	}
@@ -401,9 +437,7 @@ Dictionary<string, Procedure> procedureTable;
 		} else if (la.kind == 25) {
 			Get();
 		} else SynErr(50);
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Bool);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.Bool);
+		tryToInsertConstant(DataType.Bool);
 		
 	}
 
@@ -421,6 +455,7 @@ Dictionary<string, Procedure> procedureTable;
 		}
 		tipo();
 		int type = DataType.toDataType(t.val);
+		actualProcedure.Parameters.Add(type);
 		
 		Expect(1);
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
@@ -430,6 +465,7 @@ Dictionary<string, Procedure> procedureTable;
 		else
 		{
 		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
+		actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
 		}
 		
 		if (la.kind == 34) {
@@ -484,24 +520,124 @@ Dictionary<string, Procedure> procedureTable;
 
 	void ciclowhile() {
 		Expect(18);
+		PSaltos.Push(quadruples.Count);
+		
 		Expect(30);
 		expresion();
+		int aux = PTipos.Pop();
+		
+		if (aux != DataType.Bool)
+		{
+		SemErr("Error - Se esperaba un booleano en el while");
+		finishExecution();
+		}
+		else
+		{
+		int res = PilaOperandos.Pop();
+		Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
+		quadruples.Add(qAux);
+		PSaltos.Push(quadruples.Count - 1);
+		
+		}
+		
 		Expect(31);
 		bloque();
+		int falso = PSaltos.Pop();
+		int retorno = PSaltos.Pop();
+		Quadruple qAux2 = new Quadruple(OperationCode.Goto, -1, -1, retorno);
+		quadruples.Add(qAux2);
+		quadruples[falso].TemporalRegorJump = quadruples.Count;
+		
+		
 	}
 
 	void ciclofor() {
 		Expect(19);
 		Expect(30);
 		Expect(1);
+		tryToInsertVariable();
+		
 		Expect(29);
+		POper.Push(OperationCode.Assignment);
+		
 		expresion();
+		int ladoDer = PilaOperandos.Pop();
+		int ladoIzq = PilaOperandos.Pop();
+		
+		int tipoDer = PTipos.Pop();
+		int tipoIzq = PTipos.Pop();
+		int asigna = POper.Pop();
+		
+		if (tipoDer == tipoIzq)
+		{			
+			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+			quadruples.Add(qAux);
+		}
+		else
+		{
+			SemErr("Error - Tipos no compatibles en asignaciÃ³n.");
+		}
+		
+		PSaltos.Push(quadruples.Count);		//Pointer a antes de condiciÃ³n
+		
+		
 		Expect(27);
 		expresion();
+		int res = PilaOperandos.Pop();										//Resultado de evaluar la expresiÃ³n del for
+		int tipo = PTipos.Pop();
+		
+		if (tipo != DataType.Bool)
+		{
+		SemErr("Error - Se esperaba un booleano en el for");
+		finishExecution();
+		}
+		else
+		{
+		PSaltos.Push(quadruples.Count);										//Pointer para regresar al GotoF
+		Quadruple qAux2 = new Quadruple(OperationCode.GotoF, res, -1, -1);	//Genera cuadrupulo del GotoF
+		quadruples.Add(qAux2);
+		PSaltos.Push(quadruples.Count);										//Pointer para regresar al Goto siguiente
+		Quadruple qAux3 = new Quadruple(OperationCode.Goto, -1, -1, -1);	//Goto que sirve para saltar el incremento
+		quadruples.Add(qAux3);
+		PSaltos.Push(quadruples.Count);										//Pointer a antes del incremento
+		}
+		
+		
+		
 		Expect(27);
 		expresion();
+		int res2 = PilaOperandos.Pop();													//Resultado de lo que cambia la variable
+		Quadruple qAux4 = new Quadruple(OperationCode.Assignment, res2, -1, ladoIzq);	//Se asigna el resultado de la expresion a la variable de control
+		quadruples.Add(qAux4);
+		
+		//Se sacan todos los datos que habiamos metido de la pila de saltos para crear el goto a antes de la condicion y rellenar el Goto que se saltaba la expresion de
+		//la variable de control
+		int antIncremento = PSaltos.Pop();										
+		int saltoAEj = PSaltos.Pop();
+		int gotoF = PSaltos.Pop();
+		int antCondicion = PSaltos.Pop();
+		
+		Quadruple qAux5 = new Quadruple(OperationCode.Goto, -1, -1, antCondicion);
+		quadruples.Add(qAux5);
+		
+		quadruples[saltoAEj].TemporalRegorJump = quadruples.Count;
+		
+		//Se vuelven a meter los datos no usados al stack
+		PSaltos.Push(gotoF);
+		PSaltos.Push(antIncremento);
+		
+		
 		Expect(31);
 		bloque();
+		antIncremento = PSaltos.Pop();
+		Quadruple qAux6 = new Quadruple(OperationCode.Goto, -1, -1, antIncremento);
+		quadruples.Add(qAux6);
+		
+		//Se rellena el GotoF hacia la siguiente instrucciÃ³n a ejecutar
+		gotoF = PSaltos.Pop();
+		quadruples[gotoF].TemporalRegorJump = quadruples.Count;
+		
+		
 	}
 
 	void ciclos() {
@@ -516,12 +652,38 @@ Dictionary<string, Procedure> procedureTable;
 		Expect(14);
 		Expect(30);
 		expresion();
+		int aux = PTipos.Pop();
+		
+		if (aux != DataType.Bool)
+		{
+		SemErr("Error - Se esperaba un booleano en el if");
+		finishExecution();
+		}
+		else
+		{
+		int res = PilaOperandos.Pop();
+		Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
+		quadruples.Add(qAux);
+		PSaltos.Push(quadruples.Count - 1);
+		
+		}
+		
 		Expect(31);
 		bloque();
 		if (la.kind == 15) {
 			Get();
+			Quadruple qAux = new Quadruple(OperationCode.Goto, -1, -1, -1);
+			quadruples.Add(qAux);
+			int falso = PSaltos.Pop();
+			quadruples[falso].TemporalRegorJump = quadruples.Count;
+			PSaltos.Push(quadruples.Count - 1);
+			
+			
 			bloque();
 		}
+		int fin = PSaltos.Pop();
+		quadruples[fin].TemporalRegorJump = quadruples.Count;
+		
 	}
 
 	void escritura() {

@@ -1,14 +1,13 @@
 program Marcelo;
-int A, B, C;
+int u = 8;
+function int uno (int p, bool y)
+{
+	u = 8 + 7;
+}
 
 void main()
 {
-	int D, E, F, G, H, I, J;
-	string l;
-	float Q;
-	string Z;
-	Q = A * (B * (C + D) / F * G - H) / I + J;
-	Z = readLine();
-	print(A, B, C);
-
+	int i, x, y = 8;
+	bool h, f, j = false;
+	int[5] p, o, z;
 }

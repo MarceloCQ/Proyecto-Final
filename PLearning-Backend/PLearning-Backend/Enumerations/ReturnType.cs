@@ -5,6 +5,9 @@ using System.Text;
 
 namespace PLearning_Backend.Enumerations
 {
+    /// <summary>
+    /// Clase que se encarga de manejar los tipos de retorno de una función mas el Program y el Main
+    /// </summary>
     public static class ReturnType
     {
         public static int Int = 0;
@@ -16,6 +19,11 @@ namespace PLearning_Backend.Enumerations
         public static int Program = 6;
         public static int Main = 7;
 
+        /// <summary>
+        /// Convierte un string al tipo de retorno correspondiente
+        /// </summary>
+        /// <param name="returnType">String que representa el tipo se retorno correspondiente</param>
+        /// <returns>El numero del tpo de retorno que corresponde al string</returns>
         public static int toReturnType(string returnType)
         {
             switch (returnType)

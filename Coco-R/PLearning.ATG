@@ -5,67 +5,124 @@ using PLearning_Backend.Structures;
 
 COMPILER PLearning
  
-	Dictionary<string, Procedure> procedureTable;
-	Procedure actualProcedure;
+	Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos, la llave es el nombre del procedimiento
+	Dictionary<string, Constant> constantTable;				//Diccionario de constantes, la llave es el valor de la constante
+
+	Procedure actualProcedure;								//Apunta al procedimiento actual en el que se está
 	int tipoActual;
-	int scopeActual = VirtualStructure.VariableType.Global;
-	string programID;
+	int scopeActual = VirtualStructure.VariableType.Global;	//Apunta al scope actual, global o local
+	string programID;										//Nombre del programa
 
-	Stack<int> POper = new Stack<int>();
-	Stack<int> PilaOperandos = new Stack<int>();
-	Stack<int> PTipos = new Stack<int>();
+	Stack<int> POper = new Stack<int>();					//Pila de operadores para la generación de cuadruplos
+	Stack<int> PilaOperandos = new Stack<int>();			//Pila de operandos para la generación de cuádruplos
+	Stack<int> PTipos = new Stack<int>();					//Pila de tipos para la validación de semántica
+	Stack<int> PSaltos = new Stack<int>();					//Pila de saltos para guardar los Jumps o la referencia a un Goto/GotoF
 
-	List<Quadruple> quadruples = new List<Quadruple>();
+	List<Quadruple> quadruples = new List<Quadruple>();		//Lista de los cuádruplos del programa
 
+	/// <summary>
+    /// Método que sirve para intentar generar un cuádruplo de las expresiones, revisa que se
+    /// pueda realizar la operación y si no, manda un error de semántica. 
+    /// </summary>
 	private void tryToGenerateQuadruple()
 	{
-		int operat = POper.Pop();
-		int operand2 = PilaOperandos.Pop();
-		int tipo2 = PTipos.Pop();
-		int operand1 = PilaOperandos.Pop();
-		int tipo1 = PTipos.Pop();
+		int operat = POper.Pop();				//Se saca el operador de la pila de operadores
+		int operand2 = PilaOperandos.Pop();		//Se saca el operando del lado derecho de la pila de operandos
+		int tipo2 = PTipos.Pop();				//Se saca el tipo del operando del lado derecho de la pila de tipos
+		int operand1 = PilaOperandos.Pop();		//Se saca el operando del lado izquierdo de la pila de operandos
+		int tipo1 = PTipos.Pop();				//Se saca el tipo del operando del lado izquierdo de la pila de tipos
 
-		int newType = SemanticCube.getCombiningType(tipo1, tipo2, operat);
+		//Se obtiene el tipo resultante del cubo semántico al combinar ambos tipos con el operador
+		int newType = SemanticCube.getCombiningType(tipo1, tipo2, operat);  
 
+		//Se verifica que el tipo resultante no sea cero, es decir, que si se puedan combinar dichos tipos
 		if (newType != 0)
 		{
-			int temp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, newType);				 
-			Quadruple qAux = new Quadruple(operat, operand1, operand2, temp);
-			quadruples.Add(qAux);
-			PilaOperandos.Push(temp);
-			PTipos.Push(newType);
+			int temp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, newType); 	//Se obtiene la siguiente dirección temporal
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, newType);	  	//Se incrementa el contador de tamaño de temporales					 	
+			Quadruple qAux = new Quadruple(operat, operand1, operand2, temp);						//Se genera un nuevo cuadruplo con los datos obtenidos		
+			quadruples.Add(qAux);																	//Se añade a la lista de cuádruplos
+			PilaOperandos.Push(temp);																//Se mete el temporal resultante a la pila de operandos
+			PTipos.Push(newType);																	//Se mete el tipo resultante a a la pila de tipos
 		}
+		//Si no se pueden combinar
 		else
 		{
+			//Se genera un error de semántica y se termina la ejecución
 			SemErr("Error - Tipos incompatibles");
 			finishExecution();
 		}
 	}
 
+	/// <summary>
+    /// Método que sirve para intentar insertar una variable en la pila de operandos 
+    /// </summary>
 	private void tryToInsertVariable()
 	{
+		//Si la variable no está en la tabla de variables del procedimiento correspondiente
 		if (!actualProcedure.VariableTable.ContainsKey(t.val))
 		{
+			//Si la varaible no está en la tabla de variables del procedimiento global
 			if (!procedureTable[programID].VariableTable.ContainsKey(t.val))
 			{
+				//Se genera un error de semántica
 				SemErr("Variable no declarada");
+				finishExecution();
 			}
+			//Si la variable se encuentra en la tabla de variables del procedimiento global
 			else
 			{
+				//Se mete la dirección en la pila de operandos y el tipo en la pila de tipos.
 				Variable v = procedureTable[programID].VariableTable[t.val];
 				PilaOperandos.Push(v.VirtualDir);
 				PTipos.Push(v.Type);
 			}
 			
 		}
+		//Si la variable si se encuentra en la tabla de variables del procedimiento actual
 		else
 		{
+			//Se mete la dirección en la pila de operandos y el tipo en la pila de tipos.
 			Variable v = actualProcedure.VariableTable[t.val];
 			PilaOperandos.Push(v.VirtualDir);
 			PTipos.Push(v.Type);
 		}
 	}
 
+	/// <summary>
+    /// Método que sirve para intentar insertar una constante en la pila de operandos 
+    /// </summary>
+	private void tryToInsertConstant(int dataType)
+	{
+		int virtualDir;							//Direccion virtual de la constante
+
+		//Si la constante ya se encuentra en el diccionario
+		if (constantTable.ContainsKey(t.val))
+		{	
+			//Se obtiene la dirección virtual
+			virtualDir = constantTable[t.val].VirtualDir;
+		}
+		//Si no se encuentra en el diccionario
+		else
+		{
+			//Se obtiene la dirección virtual de la estructura virtual
+			virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, dataType);
+
+			//Se crea la nueva constante
+			Constant c = new Constant(t.val, virtualDir);
+
+			//Se inserta en la tabla de constantes
+			constantTable.Add(t.val, c);
+		}
+		
+		//Se inserta la constante en la pila de operandos y en la pila de tipos
+		PilaOperandos.Push(virtualDir);
+		PTipos.Push(dataType);
+	}
+
+	///<summary>
+	/// Método que sirve para finalizar la ejecución del programa.
+	///</summary>
 	private void finishExecution()
 	{
 		Console.ReadLine();
@@ -139,7 +196,8 @@ PRODUCTIONS
 /*---------------------------------------------- PLEARNING ---------------------------------------------- */
 PLearning = PROGRAM
 	(. 
-		procedureTable = new Dictionary<string, Procedure>(); 
+		procedureTable = new Dictionary<string, Procedure>();
+		constantTable = new Dictionary<string, Constant>(); 
 	.)
  ID
  	(. 
@@ -149,13 +207,16 @@ PLearning = PROGRAM
 	.) 
 PYC {vars}
 	(.
-		scopeActual = VirtualStructure.VariableType.Local; 
+		scopeActual = VirtualStructure.VariableType.Local;
+		PSaltos.Push(quadruples.Count);
+		quadruples.Add(new Quadruple(OperationCode.Goto, -1, -1, -1)); 
 	.)
  {funcion} main.
 
 /*---------------------------------------------- VARS ---------------------------------------------- */
 vars = tipo
 	(. 
+		List<int> registros = new List<int>();
  		tipoActual = DataType.toDataType(t.val); 
  	.)
 (ID 
@@ -166,7 +227,10 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
+			int virtualDir = VirtualStructure.getNext(scopeActual, tipoActual);
+			registros.Add(virtualDir);
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, virtualDir));
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, tipoActual);
 		}
   	.)
 {COMA ID
@@ -177,10 +241,25 @@ vars = tipo
 		}
 		else
 		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
+			int virtualDir = VirtualStructure.getNext(scopeActual, tipoActual);
+			registros.Add(virtualDir);
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, virtualDir));
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, tipoActual);
 		} 
 	.)
- } [IGUAL (ctelet | ctenum | ctebool)] PYC | CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI 
+ } [IGUAL (ctelet | ctenum | ctebool)
+	(.
+		foreach (int r in registros)
+		{
+			quadruples.Add(new Quadruple(OperationCode.Assignment, constantTable[t.val].VirtualDir, -1, r));
+		}
+
+	.)
+
+ ] 
+
+|
+CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI 
  ID
   (.
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
@@ -203,7 +282,7 @@ vars = tipo
 			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
 		}
   	.)
-} PYC ).
+}) PYC.
 
 
 /*---------------------------------------------- FUNCION ---------------------------------------------- */
@@ -224,7 +303,32 @@ ID
 		}
 		
 	.) 
-PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
+PARAB [parametro {COMA parametro }] PARCI LLAVEAB
+(.
+	actualProcedure.InitialDir = quadruples.Count;
+.)
+{vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
+
+/*---------------------------------------------- PARAMETRO ---------------------------------------------- */
+parametro = [REF] tipo
+	(.
+		int type = DataType.toDataType(t.val);
+		actualProcedure.Parameters.Add(type);
+	.)
+ ID 
+ 	(.
+ 		if (actualProcedure.VariableTable.ContainsKey(t.val))
+		{
+			SemErr("Variable previamente declarada");
+		}
+		else
+		{
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
+		}
+ 	.)
+
+ [ CORCHAB CORCHCI ].
 
 /*---------------------------------------------- MAIN ---------------------------------------------- */
 main = VOID MAIN 
@@ -232,7 +336,14 @@ main = VOID MAIN
 		actualProcedure = new Procedure("main", ReturnType.Main);
 		procedureTable.Add("main", actualProcedure);
 	.)
-PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI .
+PARAB PARCI LLAVEAB 
+	(.
+		actualProcedure.InitialDir = quadruples.Count;
+		int got = PSaltos.Pop();
+		quadruples[got].TemporalRegorJump = quadruples.Count;
+
+	.)
+{vars} {estatuto} LLAVECI .
 
 /*---------------------------------------------- REGRESA ---------------------------------------------- */
 regresa = (tipo | VOID).
@@ -244,16 +355,167 @@ tipo = (INT | FLOAT | STRING | BOOL | CHAR).
 bloque = LLAVEAB {estatuto} LLAVECI .
 
 /*---------------------------------------------- CICLOWHILE ---------------------------------------------- */
-ciclowhile = WHILE PARAB expresion PARCI bloque.
+ciclowhile = WHILE 
+	(.
+		PSaltos.Push(quadruples.Count);
+	.)
+PARAB expresion 
+	(.
+		int aux = PTipos.Pop();
+
+		if (aux != DataType.Bool)
+		{
+			SemErr("Error - Se esperaba un booleano en el while");
+			finishExecution();
+		}
+		else
+		{
+			int res = PilaOperandos.Pop();
+			Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
+			quadruples.Add(qAux);
+			PSaltos.Push(quadruples.Count - 1);
+
+		}
+	.)
+PARCI bloque
+(.
+	int falso = PSaltos.Pop();
+	int retorno = PSaltos.Pop();
+	Quadruple qAux2 = new Quadruple(OperationCode.Goto, -1, -1, retorno);
+	quadruples.Add(qAux2);
+	quadruples[falso].TemporalRegorJump = quadruples.Count;
+
+.)
+.
 
 /*---------------------------------------------- CICLOFOR ---------------------------------------------- */
-ciclofor = FOR PARAB ID IGUAL expresion PYC expresion PYC expresion PARCI bloque.
+ciclofor = FOR PARAB ID 
+	(.
+		tryToInsertVariable();
+	.)
+IGUAL 
+	(.
+		POper.Push(OperationCode.Assignment);
+	.)
+expresion
+	(.
+		int ladoDer = PilaOperandos.Pop();
+ 		int ladoIzq = PilaOperandos.Pop();
+
+ 		int tipoDer = PTipos.Pop();
+ 		int tipoIzq = PTipos.Pop();
+ 		int asigna = POper.Pop();
+
+ 		if (tipoDer == tipoIzq)
+ 		{			
+ 			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
+ 			quadruples.Add(qAux);
+ 		}
+ 		else
+ 		{
+ 			SemErr("Error - Tipos no compatibles en asignación.");
+ 		}
+
+ 		PSaltos.Push(quadruples.Count);		//Pointer a antes de condición
+
+	.)
+PYC expresion 
+	(.
+		int res = PilaOperandos.Pop();										//Resultado de evaluar la expresión del for
+		int tipo = PTipos.Pop();
+
+		if (tipo != DataType.Bool)
+		{
+			SemErr("Error - Se esperaba un booleano en el for");
+			finishExecution();
+		}
+		else
+		{
+			PSaltos.Push(quadruples.Count);										//Pointer para regresar al GotoF
+			Quadruple qAux2 = new Quadruple(OperationCode.GotoF, res, -1, -1);	//Genera cuadrupulo del GotoF
+			quadruples.Add(qAux2);
+			PSaltos.Push(quadruples.Count);										//Pointer para regresar al Goto siguiente
+			Quadruple qAux3 = new Quadruple(OperationCode.Goto, -1, -1, -1);	//Goto que sirve para saltar el incremento
+			quadruples.Add(qAux3);
+			PSaltos.Push(quadruples.Count);										//Pointer a antes del incremento
+		}
+
+		
+	.)
+PYC expresion 
+	(.
+		int res2 = PilaOperandos.Pop();													//Resultado de lo que cambia la variable
+		Quadruple qAux4 = new Quadruple(OperationCode.Assignment, res2, -1, ladoIzq);	//Se asigna el resultado de la expresion a la variable de control
+		quadruples.Add(qAux4);
+
+		//Se sacan todos los datos que habiamos metido de la pila de saltos para crear el goto a antes de la condicion y rellenar el Goto que se saltaba la expresion de
+		//la variable de control
+		int antIncremento = PSaltos.Pop();										
+		int saltoAEj = PSaltos.Pop();
+		int gotoF = PSaltos.Pop();
+		int antCondicion = PSaltos.Pop();
+
+		Quadruple qAux5 = new Quadruple(OperationCode.Goto, -1, -1, antCondicion);
+		quadruples.Add(qAux5);
+
+		quadruples[saltoAEj].TemporalRegorJump = quadruples.Count;
+
+		//Se vuelven a meter los datos no usados al stack
+		PSaltos.Push(gotoF);
+		PSaltos.Push(antIncremento);
+
+	.)
+PARCI bloque
+	(.
+		//Se saca el antes del incremento para crear un goto vaya hacia las operaciones para la variable de control
+		antIncremento = PSaltos.Pop();
+		Quadruple qAux6 = new Quadruple(OperationCode.Goto, -1, -1, antIncremento);
+		quadruples.Add(qAux6);
+
+		//Se rellena el GotoF hacia la siguiente instrucción a ejecutar
+		gotoF = PSaltos.Pop();
+		quadruples[gotoF].TemporalRegorJump = quadruples.Count;
+
+	.)
+.
 
 /*---------------------------------------------- CICLOS ---------------------------------------------- */
 ciclos = (ciclowhile | ciclofor).
 
 /*---------------------------------------------- CONDICION ---------------------------------------------- */
-condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
+condicion = IFF PARAB expresion 
+	(.
+		int aux = PTipos.Pop();
+
+		if (aux != DataType.Bool)
+		{
+			SemErr("Error - Se esperaba un booleano en el if");
+			finishExecution();
+		}
+		else
+		{
+			int res = PilaOperandos.Pop();
+			Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
+			quadruples.Add(qAux);
+			PSaltos.Push(quadruples.Count - 1);
+
+		}
+	.)
+PARCI bloque [ELSE  
+	(.
+		Quadruple qAux = new Quadruple(OperationCode.Goto, -1, -1, -1);
+		quadruples.Add(qAux);
+		int falso = PSaltos.Pop();
+		quadruples[falso].TemporalRegorJump = quadruples.Count;
+		PSaltos.Push(quadruples.Count - 1);
+
+	.)
+bloque]
+	(.
+		int fin = PSaltos.Pop();
+		quadruples[fin].TemporalRegorJump = quadruples.Count;
+	.)
+.
 
 /*---------------------------------------------- ESTATUTO ---------------------------------------------- */
 estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
@@ -317,24 +579,6 @@ asignacionollamada = ID (
 /*---------------------------------------------- CUANTIFICADOR ---------------------------------------------- */
 cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
 
-/*---------------------------------------------- PARAMETRO ---------------------------------------------- */
-parametro = [REF] tipo
-	(.
-		int type = DataType.toDataType(t.val);
-	.)
- ID 
- 	(.
- 		if (actualProcedure.VariableTable.ContainsKey(t.val))
-		{
-			SemErr("Variable previamente declarada");
-		}
-		else
-		{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
-		}
- 	.)
-
- [ CORCHAB CORCHCI ].
 
 /*---------------------------------------------- EXPRESION ---------------------------------------------- */
 expresion = comparacion
@@ -440,39 +684,29 @@ ctevar = (ctelet | ctebool | ctenum | ID
 /*---------------------------------------------- CTELET ---------------------------------------------- */
 ctelet = (CTESTRING
 	(.
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.String);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.String);
+		tryToInsertConstant(DataType.String);
 	.)
  | CTECHAR
 	(.
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Char);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.Char);
+		tryToInsertConstant(DataType.Char);
 	.)
  ).
 
 /*---------------------------------------------- CTEBOOL ---------------------------------------------- */
 ctebool = (TRUE | FALSE) 
 	(.
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Bool);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.Bool);
+		tryToInsertConstant(DataType.Bool);
 	.)
 .
 
 /*---------------------------------------------- CTENUM ---------------------------------------------- */
 ctenum = (CTEENTERA 
 	(.
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Int);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.Int);
+		tryToInsertConstant(DataType.Int);
 	.)
 | CTEFLOAT
 	(.
-		int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, DataType.Float);
-		PilaOperandos.Push(virtualDir);
-		PTipos.Push(DataType.Float);
+		tryToInsertConstant(DataType.Int);
 	.)
 ).
 
