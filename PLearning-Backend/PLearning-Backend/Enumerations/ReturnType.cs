@@ -10,12 +10,12 @@ namespace PLearning_Backend.Enumerations
     /// </summary>
     public static class ReturnType
     {
-        public static int Int = 0;
-        public static int Float = 1;
-        public static int String = 2;
-        public static int Bool = 3;
-        public static int Char = 4;
-        public static int Void = 5;
+        public static int Void = 0;
+        public static int Int = 1;
+        public static int Float = 2;
+        public static int String = 3;
+        public static int Bool = 4;
+        public static int Char = 5;
         public static int Program = 6;
         public static int Main = 7;
 

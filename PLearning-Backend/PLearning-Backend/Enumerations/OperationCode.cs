@@ -30,6 +30,7 @@ namespace PLearning_Backend.Enumerations
         public static int Param = 16;
         public static int Ret = 17;
         public static int Return = 18;
+        public static int GoSub = 19;
 
         /// <summary>
         /// Método que se encarga de convertir un string a un código de operación
@@ -93,8 +94,10 @@ namespace PLearning_Backend.Enumerations
                 case 13: return "Print";
                 case 14: return "Read";
                 case 15: return "Era";
-                case 16: return "Ret";
-                case 17: return "Param";
+                case 16: return "Param";
+                case 17: return "Ret";
+                case 18: return "Return";
+                case 19: return "GoSub";
                 default: return "Error";
 
             }

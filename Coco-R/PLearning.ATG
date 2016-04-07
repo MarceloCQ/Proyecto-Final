@@ -6,6 +6,7 @@ using PLearning_Backend.Structures;
 COMPILER PLearning
  
 	Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos, la llave es el nombre del procedimiento
+	List<string> procedureList;								//Lista que sirve para mapear los procedimientos con un numero
 	Dictionary<string, Constant> constantTable;				//Diccionario de constantes, la llave es el valor de la constante
 
 	Procedure actualProcedure;								//Apunta al procedimiento actual en el que se está
@@ -19,6 +20,17 @@ COMPILER PLearning
 	Stack<int> PSaltos = new Stack<int>();					//Pila de saltos para guardar los Jumps o la referencia a un Goto/GotoF
 
 	List<Quadruple> quadruples = new List<Quadruple>();		//Lista de los cuádruplos del programa
+
+
+	/// <summary>
+	/// Método que inserta un nuevo cuadruplo y lo mete a la lista de cuadruplos
+	/// </summary>
+	private void insertQuadruple(int opCode, int oper1, int oper2, int TemporalRegorJump)
+	{
+		Quadruple qAux = new Quadruple(opCode, oper1, oper2, TemporalRegorJump);
+		quadruples.Add(qAux);
+	}
+
 
 	/// <summary>
     /// Método que sirve para intentar generar un cuádruplo de las expresiones, revisa que se
@@ -40,8 +52,7 @@ COMPILER PLearning
 		{
 			int temp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, newType); 	//Se obtiene la siguiente dirección temporal
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, newType);	  	//Se incrementa el contador de tamaño de temporales					 	
-			Quadruple qAux = new Quadruple(operat, operand1, operand2, temp);						//Se genera un nuevo cuadruplo con los datos obtenidos		
-			quadruples.Add(qAux);																	//Se añade a la lista de cuádruplos
+			insertQuadruple(operat, operand1, operand2, temp); 										//Se genera un nuevo cuadruplo con los datos obtenidos		
 			PilaOperandos.Push(temp);																//Se mete el temporal resultante a la pila de operandos
 			PTipos.Push(newType);																	//Se mete el tipo resultante a a la pila de tipos
 		}
@@ -121,6 +132,22 @@ COMPILER PLearning
 	}
 
 	///<summary>
+	/// Método que sirve para encontrar el numero de procedimiento
+	///</summary>
+	private int findProcedure(string name)
+	{
+		for (int i = 0; i < procedureList.Count; i++)
+		{
+			if (procedureList[i] == name)
+			{
+				return i;
+			}			
+		}
+
+		return -1;
+	}
+
+	///<summary>
 	/// Método que sirve para finalizar la ejecución del programa.
 	///</summary>
 	private void finishExecution()
@@ -196,45 +223,55 @@ PRODUCTIONS
 /*---------------------------------------------- PLEARNING ---------------------------------------------- */
 PLearning = PROGRAM
 	(. 
-		procedureTable = new Dictionary<string, Procedure>();
-		constantTable = new Dictionary<string, Constant>(); 
+		procedureTable = new Dictionary<string, Procedure>();			//Se inicializa la tabla de procedimientos
+		procedureList = new List<string>();								//Se inicializa la lista de procedimientos
+		constantTable = new Dictionary<string, Constant>(); 			//Se inicializa la tabla de constantes
 	.)
  ID
  	(. 
- 		actualProcedure = new Procedure(t.val, ReturnType.Program);
- 		procedureTable.Add(t.val, actualProcedure);   
- 		programID = t.val;
+ 		actualProcedure = new Procedure(t.val, ReturnType.Program);		//Se asgian como procedimiento actual al procedimiento global
+ 		procedureTable.Add(t.val, actualProcedure);   					//Se añade este procedimiento a la tabla de procedimientos
+ 		procedureList.Add(t.val);										//Se añade también a la lista de procedimientos
+ 		programID = t.val;												//Se asigna el id del programa para uso posterior
 	.) 
 PYC {vars}
 	(.
-		scopeActual = VirtualStructure.VariableType.Local;
-		PSaltos.Push(quadruples.Count);
-		quadruples.Add(new Quadruple(OperationCode.Goto, -1, -1, -1)); 
+		scopeActual = VirtualStructure.VariableType.Local;				//Se asigna el scope como local cuando se acaba lo primero
+		PSaltos.Push(quadruples.Count);									//Añade en la pila de saltos la posición en donde estará el goto al main
+		insertQuadruple(OperationCode.Goto, -1, -1, -1);
 	.)
  {funcion} main.
 
 /*---------------------------------------------- VARS ---------------------------------------------- */
 vars = tipo
 	(. 
-		List<int> registros = new List<int>();
- 		tipoActual = DataType.toDataType(t.val); 
+
+		List<int> registros = new List<int>();		//Lista de registros que sirve para asignar las variables que tienen asignación inicial
+ 		tipoActual = DataType.toDataType(t.val); 	//Se guarda el tipo en una variable
  	.)
 (ID 
 	(.
+		//Si la variable ya estaba declarada anteriormente, se genera un error
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
 			SemErr("Error - Variable " + t.val + " previamente declarada");
 		}
+		//Si no estaba declarada
 		else
 		{
+			//Se asigna una nueva dirección virtual
 			int virtualDir = VirtualStructure.getNext(scopeActual, tipoActual);
+			//Se añade a la lista de registros
 			registros.Add(virtualDir);
+			//Se añade la nueva variable a la tabla de variables del procedimiento en cuestión
 			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, virtualDir));
+			//Se incrementa el contador de tamaño correspondiente
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, tipoActual);
 		}
   	.)
 {COMA ID
  	(.
+ 		//Pasa lo mismo que en lo anterior si hay mas variables
  		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
 			SemErr("Error - Variable '" + t.val + "' previamente declarada");
@@ -249,9 +286,10 @@ vars = tipo
 	.)
  } [IGUAL (ctelet | ctenum | ctebool)
 	(.
+		//Se recorren todos los registros para asigna el valor a todas las variables que se declararon
 		foreach (int r in registros)
 		{
-			quadruples.Add(new Quadruple(OperationCode.Assignment, constantTable[t.val].VirtualDir, -1, r));
+			insertQuadruple(OperationCode.Assignment, constantTable[t.val].VirtualDir, -1, r);
 		}
 
 	.)
@@ -262,10 +300,12 @@ vars = tipo
 CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI 
  ID
   (.
+  		//Si la variable dimensionada se encuentra en la tabla de variables se marca error
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
 			SemErr("Error - Variable '" + t.val + "' previamente declarada");
 		}
+		//Si no, entonces se añade a la tabla de variables
 		else
 		{
 			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
@@ -273,6 +313,7 @@ CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI
   	.)
 {COMA ID
 	(.
+		//Lo mismo pasa si hay mas variables
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
 			SemErr("Error - Variable '" + t.val + "' previamente declarada");
@@ -288,41 +329,75 @@ CORCHAB CTEENTERA [ COMA CTEENTERA ] CORCHCI
 /*---------------------------------------------- FUNCION ---------------------------------------------- */
 funcion = FUNCTION regresa
 	(.
+		//Se guarda el tipo de retorno de la funcion
 		int retType = ReturnType.toReturnType(t.val);
 	.)
 ID 
 	(.
+		//Se revise que la función no haya sido previamente declarada en el diccionario de procedimientos
 		if (procedureTable.ContainsKey(t.val))
 		{
 			SemErr("Error - Funcion '" + t.val + "' previamente declarada");
 		}
 		else
 		{
+			//Si no, se añade a la tabla de procedimientos
 			actualProcedure = new Procedure(t.val, retType);
 			procedureTable.Add(t.val, actualProcedure);
+			procedureList.Add(t.val);
 		}
 		
 	.) 
 PARAB [parametro {COMA parametro }] PARCI LLAVEAB
 (.
+	//Se asigna la dirección inicial de la función
 	actualProcedure.InitialDir = quadruples.Count;
 .)
-{vars} {estatuto} [ RETURN expresion PYC ] LLAVECI .
+{vars} {estatuto} [ RETURN expresion 
+	(.
+		//Se saca el tipo de la expresion asi como el resultado
+		int returnType = PTipos.Pop();
+		int ret = PilaOperandos.Pop();
+
+		//Si el tipo de la expresión no coincide con el tipo de retorno se marca error
+		if (returnType != retType)
+		{
+			SemErr("Error - Tipos incompatibles en return");
+			finishExecution();
+		}
+		else
+		{
+			//Si si coincide se genera un nuevo cuádruplo
+			insertQuadruple(OperationCode.Return, ret, -1, -1);
+		}
+
+		
+
+	.)
+PYC ] LLAVECI 
+	(.
+		insertQuadruple(OperationCode.Ret, -1, -1, -1);
+
+	.)
+.
 
 /*---------------------------------------------- PARAMETRO ---------------------------------------------- */
 parametro = [REF] tipo
 	(.
+		//Se saca el tipo de parametro y se añade a la lista de parametros de la función
 		int type = DataType.toDataType(t.val);
 		actualProcedure.Parameters.Add(type);
 	.)
  ID 
  	(.
+ 		//Si la variable ya estaba declarada se marca error
  		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
 			SemErr("Variable previamente declarada");
 		}
 		else
 		{
+			//Si no, entonces se añade se la tabla de variables y se incrementa el contador de tamaño
 			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
 		}
@@ -333,12 +408,16 @@ parametro = [REF] tipo
 /*---------------------------------------------- MAIN ---------------------------------------------- */
 main = VOID MAIN 
 	(.
+		//Se pone el main como procedimiento actual y se añade a la tabla de procedimientos
 		actualProcedure = new Procedure("main", ReturnType.Main);
 		procedureTable.Add("main", actualProcedure);
+		procedureList.Add("main");
 	.)
 PARAB PARCI LLAVEAB 
 	(.
+		//Se asigna la dirección inicial al main 
 		actualProcedure.InitialDir = quadruples.Count;
+		//Se saca la posición del goto y se rellena con la dirección inicial
 		int got = PSaltos.Pop();
 		quadruples[got].TemporalRegorJump = quadruples.Count;
 
@@ -357,12 +436,15 @@ bloque = LLAVEAB {estatuto} LLAVECI .
 /*---------------------------------------------- CICLOWHILE ---------------------------------------------- */
 ciclowhile = WHILE 
 	(.
+		//Se mete la posición antes de que se evalúe la expresión en la pila de saltos
 		PSaltos.Push(quadruples.Count);
 	.)
 PARAB expresion 
 	(.
+		//Se saca el tipo de la expresión de la pila de tipos
 		int aux = PTipos.Pop();
 
+		//Si este no es booleano, entonces se marca error
 		if (aux != DataType.Bool)
 		{
 			SemErr("Error - Se esperaba un booleano en el while");
@@ -370,19 +452,26 @@ PARAB expresion
 		}
 		else
 		{
+			//Si si es booleano entonces se saca el resultado de la expresión
 			int res = PilaOperandos.Pop();
-			Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
-			quadruples.Add(qAux);
-			PSaltos.Push(quadruples.Count - 1);
+			//Se mete la posición del GotoF en la pila de Saltos
+			PSaltos.Push(quadruples.Count);
+			//Se genera el cuádruplo del GotoF con el resultado de la expresión
+			insertQuadruple(OperationCode.GotoF, res, -1, -1);
+			
 
 		}
 	.)
 PARCI bloque
 (.
+	//Se saca la posición del GotoF y la posición antes de la expresión
 	int falso = PSaltos.Pop();
 	int retorno = PSaltos.Pop();
-	Quadruple qAux2 = new Quadruple(OperationCode.Goto, -1, -1, retorno);
-	quadruples.Add(qAux2);
+
+	//Se genera un nuevo cuádruplo Goto para regresar antes de la expresión y se añade a la lista de cuádruplos
+	insertQuadruple(OperationCode.Goto, -1, -1, retorno);
+
+	//Se rellena el cuadruplo del GotoF con la posición del siguiente cuádruplo
 	quadruples[falso].TemporalRegorJump = quadruples.Count;
 
 .)
@@ -391,28 +480,35 @@ PARCI bloque
 /*---------------------------------------------- CICLOFOR ---------------------------------------------- */
 ciclofor = FOR PARAB ID 
 	(.
+		//Se intenta insertar la variable en la pila de operandos
 		tryToInsertVariable();
 	.)
 IGUAL 
 	(.
+		//Se mete a la pila de operadores el operador de asignación
 		POper.Push(OperationCode.Assignment);
 	.)
 expresion
 	(.
+		//Se obtiene el lado derecho y el lado izquierdo de la expresión
 		int ladoDer = PilaOperandos.Pop();
  		int ladoIzq = PilaOperandos.Pop();
 
+ 		//Se obtiene el tipo resultante del lado izquierdo y del lado derecho, así como el operador
  		int tipoDer = PTipos.Pop();
  		int tipoIzq = PTipos.Pop();
  		int asigna = POper.Pop();
 
+ 		//Si si se puede asignar
  		if (tipoDer == tipoIzq)
- 		{			
- 			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
- 			quadruples.Add(qAux);
+ 		{		
+ 			//Se genera un nuevo cuádruplo para realizar la asignación y se mete a la lista	
+ 			insertQuadruple(asigna, ladoDer, -1, ladoIzq);
+
  		}
  		else
  		{
+ 			//Si no, entonces hay un error de semántica
  			SemErr("Error - Tipos no compatibles en asignación.");
  		}
 
@@ -422,21 +518,22 @@ expresion
 PYC expresion 
 	(.
 		int res = PilaOperandos.Pop();										//Resultado de evaluar la expresión del for
-		int tipo = PTipos.Pop();
+		int tipo = PTipos.Pop();											//Se obtiene el tipo resultante de la expresión
 
+
+		//Se revisa que el tipo resultante sea booleano
 		if (tipo != DataType.Bool)
 		{
+			//Si no lo es se marca error de semántica
 			SemErr("Error - Se esperaba un booleano en el for");
 			finishExecution();
 		}
 		else
 		{
 			PSaltos.Push(quadruples.Count);										//Pointer para regresar al GotoF
-			Quadruple qAux2 = new Quadruple(OperationCode.GotoF, res, -1, -1);	//Genera cuadrupulo del GotoF
-			quadruples.Add(qAux2);
+			insertQuadruple(OperationCode.GotoF, res, -1, -1);					//Genera cuadrupulo del GotoF
 			PSaltos.Push(quadruples.Count);										//Pointer para regresar al Goto siguiente
-			Quadruple qAux3 = new Quadruple(OperationCode.Goto, -1, -1, -1);	//Goto que sirve para saltar el incremento
-			quadruples.Add(qAux3);
+			insertQuadruple(OperationCode.Goto, -1, -1, -1);					//Goto que sirve para saltar el incremento
 			PSaltos.Push(quadruples.Count);										//Pointer a antes del incremento
 		}
 
@@ -445,8 +542,7 @@ PYC expresion
 PYC expresion 
 	(.
 		int res2 = PilaOperandos.Pop();													//Resultado de lo que cambia la variable
-		Quadruple qAux4 = new Quadruple(OperationCode.Assignment, res2, -1, ladoIzq);	//Se asigna el resultado de la expresion a la variable de control
-		quadruples.Add(qAux4);
+		insertQuadruple(OperationCode.Assignment, res2, -1, ladoIzq);					//Se asigna el resultado de la expresion a la variable de control
 
 		//Se sacan todos los datos que habiamos metido de la pila de saltos para crear el goto a antes de la condicion y rellenar el Goto que se saltaba la expresion de
 		//la variable de control
@@ -455,8 +551,8 @@ PYC expresion
 		int gotoF = PSaltos.Pop();
 		int antCondicion = PSaltos.Pop();
 
-		Quadruple qAux5 = new Quadruple(OperationCode.Goto, -1, -1, antCondicion);
-		quadruples.Add(qAux5);
+		insertQuadruple(OperationCode.Goto, -1, -1, antCondicion);
+
 
 		quadruples[saltoAEj].TemporalRegorJump = quadruples.Count;
 
@@ -469,8 +565,7 @@ PARCI bloque
 	(.
 		//Se saca el antes del incremento para crear un goto vaya hacia las operaciones para la variable de control
 		antIncremento = PSaltos.Pop();
-		Quadruple qAux6 = new Quadruple(OperationCode.Goto, -1, -1, antIncremento);
-		quadruples.Add(qAux6);
+		insertQuadruple(OperationCode.Goto, -1, -1, antIncremento);
 
 		//Se rellena el GotoF hacia la siguiente instrucción a ejecutar
 		gotoF = PSaltos.Pop();
@@ -485,33 +580,45 @@ ciclos = (ciclowhile | ciclofor).
 /*---------------------------------------------- CONDICION ---------------------------------------------- */
 condicion = IFF PARAB expresion 
 	(.
+		//Se obtiene el tipo resultante de la expresión de la pila de tipos
 		int aux = PTipos.Pop();
 
+		//Se revisa que este tipo sea booleano
 		if (aux != DataType.Bool)
 		{
+			//Si no lo es, se genera error
 			SemErr("Error - Se esperaba un booleano en el if");
 			finishExecution();
 		}
 		else
 		{
+			//Si si es, entonces se saca el resultado de la expresión 
 			int res = PilaOperandos.Pop();
-			Quadruple qAux = new Quadruple(OperationCode.GotoF, res, -1, -1);
-			quadruples.Add(qAux);
-			PSaltos.Push(quadruples.Count - 1);
+			//Se añade a la pila de saltos la posición del GotoF
+			PSaltos.Push(quadruples.Count);
+			//Se genera y añade a la lista un nuevo cuádruplo GotoF con el resultado
+			insertQuadruple(OperationCode.GotoF, res, -1, -1);
+
+
 
 		}
 	.)
 PARCI bloque [ELSE  
 	(.
-		Quadruple qAux = new Quadruple(OperationCode.Goto, -1, -1, -1);
-		quadruples.Add(qAux);
+		//Se crea un nuevo cuádruplo Goto para saltarse el else
+		insertQuadruple(OperationCode.Goto, -1, -1, -1);
+
+		//Se obtiene la posición del GotoF y se rellena con la siguiente posición de la lista
 		int falso = PSaltos.Pop();
 		quadruples[falso].TemporalRegorJump = quadruples.Count;
+
+		//Se mete a la pila de saltos la posición del Goto 
 		PSaltos.Push(quadruples.Count - 1);
 
 	.)
 bloque]
 	(.
+		//Se saca la posición del Goto y se rellena con la siguiente posición en la lista
 		int fin = PSaltos.Pop();
 		quadruples[fin].TemporalRegorJump = quadruples.Count;
 	.)
@@ -523,9 +630,13 @@ estatuto = (condicion | escritura | ciclos | asignacionollamada ).
 /*---------------------------------------------- LECTURA ---------------------------------------------- */
 lectura = READLINE 
 	(.
+		//Se obtiene la siguiente dirección virtual para los temporales y se mete a la pila de operandos
 		int tempString = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.String);
 		PilaOperandos.Push(tempString);
-		PTipos.Push(DataType.String);
+		//Se mete un cero la pila de tipos ya que la lectura puede ser de cualquier tipo
+		PTipos.Push(0);
+
+		//Se genera un nuevo cuádruplo con el Readline y el tempString
 		Quadruple qAux = new Quadruple(OperationCode.ReadLine, -1, -1, tempString);
 	.)
 PARAB PARCI.
@@ -533,48 +644,144 @@ PARAB PARCI.
 /*---------------------------------------------- ESCRITURA ---------------------------------------------- */
 escritura = PRINT PARAB expresion
 	(.
+		//Se saca el resultado de evaluar la expresión y con eso se genera un cuádruplo para imprimirlo
 		int resExp = PilaOperandos.Pop();
-		Quadruple qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
-		quadruples.Add(qAux);
+		insertQuadruple(OperationCode.Print, -1, -1, resExp);
 	.)
 
  { COMA expresion
 	(.
+		//Se saca el resultado de evaluar la expresión y con eso se genera un cuádruplo para imprimirlo
 		resExp = PilaOperandos.Pop();
-		qAux = new Quadruple(OperationCode.Print, -1, -1, resExp);
-		quadruples.Add(qAux);
+		insertQuadruple(OperationCode.Print, -1, -1, resExp);
 	.)
   } PARCI PYC.
 
 /*---------------------------------------------- ASIGNACIONOLLAMADA ---------------------------------------------- */
-asignacionollamada = ID (
+asignacionollamada = ID
 	(.
+		string id = t.val; //Se guarda el id por si es una función
+	.)
+(
+	(.
+		//Se intenta insertar la variable a asignar en la pila de operandos
 		tryToInsertVariable();
 	.)
 [cuantificador] IGUAL
 	(.
+		//Se mete el operador de igual a la pila de operadores
 		POper.Push(OperationCode.Assignment);
 	.)
  (expresion | lectura) 
 (.
+		//Se saca el lado derecho y el lado izquierdo de la asignación
  		int ladoDer = PilaOperandos.Pop();
  		int ladoIzq = PilaOperandos.Pop();
 
+ 		//Se saca el tipo del lado derecho y el tipo de lado izquierdo de la asignación
  		int tipoDer = PTipos.Pop();
  		int tipoIzq = PTipos.Pop();
  		int asigna = POper.Pop();
 
- 		if (tipoDer == tipoIzq)
- 		{			
- 			Quadruple qAux = new Quadruple(asigna, ladoDer, -1, ladoIzq);
- 			quadruples.Add(qAux);
+ 		//Si lo tipos son iguales o acepta cualquier tipo
+ 		if (tipoDer == tipoIzq || tipoDer == 0)
+ 		{	
+ 			//Se genera un nuevo cuádruplo y se mete a la lista		
+ 			insertQuadruple(asigna, ladoDer, -1, ladoIzq);
  		}
  		else
  		{
+ 			//Si no, se genera un error de semántica
  			SemErr("Error - Tipos no compatibles en asignación.");
+ 			finishExecution();
  		}	
 .)
- | PARAB [expresion {COMA expresion }] PARCI) PYC.
+ | PARAB 
+	(.
+		//Si el procedimiento no se encuentra en el diccionario de procedimientos
+		if (!procedureTable.ContainsKey(id))
+		{
+			//Se marca error de semántica
+			SemErr("Error - La función que se intenta llamar no existe.");
+			finishExecution();
+		}
+		else
+		{
+			//Se añade un nuevo cuadruplo "Era" con el numero de procedimiento
+			insertQuadruple(OperationCode.Era, findProcedure(id), -1, -1);
+
+			
+		}
+
+		int k = 0; 					//Se inicializa el apuntador a parametros
+
+
+	.)
+ [expresion 
+	(.
+		//Se saca el argumento junto con su tipo
+		int argument = PilaOperandos.Pop();
+		int argumentType = PTipos.Pop();
+
+		//Si el tipo de argumento no el mismo con el definido, se marca error.
+		if (k < procedureTable[id].Parameters.Count)
+		{
+			if (argumentType != procedureTable[id].Parameters[k])
+			{
+				SemErr("Error - Los tipos no coinciden con la función");
+				finishExecution();
+			}
+			else
+			{
+				//Si el tipo es el mismo, se genera un cuadruplo param con el argumento y el numero de parametro
+				insertQuadruple(OperationCode.Param, argument, -1, k);
+			}
+		}
+		else
+		{
+			SemErr("El numero de parametros no coindice con la declaración de la función");
+		}
+		
+
+
+	.)
+ {COMA 
+	(.
+		k++;
+	.)
+ expresion 
+ 	(.
+ 		//Se saca el argumento junto con su tipo
+		argument = PilaOperandos.Pop();
+		argumentType = PTipos.Pop();
+
+		//Verificar que la lista de parametros tenga la cantidad adecuada
+		if (k < procedureTable[id].Parameters.Count)
+		{
+			//Si el tipo de argumento no el mismo con el definido, se marca error.
+			if (argumentType != procedureTable[id].Parameters[k])
+			{
+				SemErr("Error - Los tipos no coinciden con la función");
+				finishExecution();
+			}
+			else
+			{
+				//Si el tipo es el mismo, se genera un cuadruplo param con el argumento y el numero de parametro
+				insertQuadruple(OperationCode.Param, argument, -1, k);
+			}
+		}
+		else
+		{
+			SemErr("El numero de parametros no coindice con la declaración de la función");
+		}
+	.)
+
+ }] PARCI
+	(.
+		insertQuadruple(OperationCode.GoSub, findProcedure(id), procedureTable[id].InitialDir, -1);
+	.)
+
+ ) PYC.
 
 /*---------------------------------------------- CUANTIFICADOR ---------------------------------------------- */
 cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
@@ -583,19 +790,24 @@ cuantificador = CORCHAB expresion [COMA expresion ] CORCHCI.
 /*---------------------------------------------- EXPRESION ---------------------------------------------- */
 expresion = comparacion
 	(.
+		//Si en el tope de la pila de operadores hay un and o un or
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
 {(AND | OR) 
 	(.
+		//Se mete el and o el or en la pila de operadores
 		POper.Push(OperationCode.toOperationCode(t.val));
 	.)
 comparacion
 	(.
+		//Si en el tope de la pila de operadores hay un and o un or
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.And || POper.Peek() == OperationCode.Or))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
@@ -604,12 +816,15 @@ comparacion
 /*---------------------------------------------- COMPARACION ---------------------------------------------- */
 comparacion = exp [(MAQUE | MEQUE | DIFERENTE | COMPARACION) 
 	(.
+		//Se mete el < o > o != o == a la pila de operadores
 		POper.Push(OperationCode.toOperationCode(t.val));
 	.)
 exp
 	(.
+		//Si en el tope de la pila de operadores hay un < o > o != o ==
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.MoreThan || POper.Peek() == OperationCode.LessThan || POper.Peek() == OperationCode.Different || POper.Peek() == OperationCode.EqualComparison))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
@@ -618,20 +833,25 @@ exp
 /*---------------------------------------------- EXP ---------------------------------------------- */
 exp = term
 	(.
+		//Si en el tope de la pila de operadores hay una suma o resta
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
 
  {(MAS | MENOS) 
 	(.
+		//Se mete la suma o la rest a la pila de operadores
 		POper.Push(OperationCode.toOperationCode(t.val));
 	.)	
 	term
 	(.
+		//Si en el tope de la pila de operadores hay una suma o resta
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.Sum || POper.Peek() == OperationCode.Substraction))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
@@ -640,19 +860,24 @@ exp = term
 /*---------------------------------------------- TERM ---------------------------------------------- */
 term = factor
 	(.
+		//Si en el tope de la pila de operadores hay una multiplicación o división
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
 {(MULT | DIV) 
 	(.
+		//Se mete la multiplicación o división a la pila de operadores
 		POper.Push(OperationCode.toOperationCode(t.val));
 	.)
 factor
 	(.
+		//Si en el tope de la pila de operadores hay una multiplicación o división
 		if (POper.Count > 0 && (POper.Peek() == OperationCode.Multiplication || POper.Peek() == OperationCode.Division))
 		{
+			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
 		}
 	.)
@@ -662,10 +887,12 @@ factor
 /*---------------------------------------------- FACTOR ---------------------------------------------- */
 factor = PARAB
 	(.
+		//Se mete un fondo falso
 		POper.Push(-1);
 	.)
  expresion PARCI
  	(.
+ 		//Se saca el fondo falso
  		POper.Pop();
 	.)
   | [MAS | MENOS] ctevar.
@@ -673,10 +900,12 @@ factor = PARAB
 /*---------------------------------------------- CTEVAR ---------------------------------------------- */
 ctevar = (ctelet | ctebool | ctenum | ID
 	(.
+		//Se obtiene el id 
 		string id = t.val;
 	.)
  (PARAB [expresion {COMA expresion }] PARCI | cuantificador |
 	(.
+		//Intenta insertar la variable en la pila de operandos
 		tryToInsertVariable();
 	.)
  ) ).
@@ -684,10 +913,12 @@ ctevar = (ctelet | ctebool | ctenum | ID
 /*---------------------------------------------- CTELET ---------------------------------------------- */
 ctelet = (CTESTRING
 	(.
+		//Se intenta insertar la constante string al diccionario de constantes 
 		tryToInsertConstant(DataType.String);
 	.)
  | CTECHAR
 	(.
+		//Se intenta insertar la constante char al diccionario de constantes 
 		tryToInsertConstant(DataType.Char);
 	.)
  ).
@@ -695,6 +926,7 @@ ctelet = (CTESTRING
 /*---------------------------------------------- CTEBOOL ---------------------------------------------- */
 ctebool = (TRUE | FALSE) 
 	(.
+		//Se intenta insertar la constante bool al diccionario de constantes 
 		tryToInsertConstant(DataType.Bool);
 	.)
 .
@@ -702,10 +934,12 @@ ctebool = (TRUE | FALSE)
 /*---------------------------------------------- CTENUM ---------------------------------------------- */
 ctenum = (CTEENTERA 
 	(.
+		//Se intenta insertar la constante entera al diccionario de constantes 
 		tryToInsertConstant(DataType.Int);
 	.)
 | CTEFLOAT
 	(.
+		//Se intenta insertar la constante flotante46 al diccionario de constantes 
 		tryToInsertConstant(DataType.Int);
 	.)
 ).
