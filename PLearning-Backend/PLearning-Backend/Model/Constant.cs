@@ -8,7 +8,7 @@ namespace PLearning_Backend.Model
     /// <summary>
     /// Clase constante la cual incluye un nombre y una direccion virtual
     /// </summary>
-    class Constant
+    public class Constant
     {
         public string Name { get; set; }        //Nombre de la constante
         public int VirtualDir { get; set; }     //Dirección virtual asignada

@@ -9,7 +9,7 @@ namespace PLearning_Backend.Model
     /// <summary>
     /// Clase procedimiento, la cual incluye todos los datos correspondientes a un procedimiento del programa
     /// </summary>
-    class Procedure
+    public class Procedure
     {
         public string Name { get; set; }                //Nombre del procedimiento
         public int Type { get; set; }                   //Tipo de retorno o void del procedimiento

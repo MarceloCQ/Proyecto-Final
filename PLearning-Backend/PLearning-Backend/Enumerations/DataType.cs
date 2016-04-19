@@ -11,11 +11,11 @@ namespace PLearning_Backend.Enumerations
     public static class DataType
     {
         //Se empieza en uno para dejarle al cubo semantico el cero como error
-        public static int Int = 1;
-        public static int Float = 2;
-        public static int String = 3;
-        public static int Bool = 4;
-        public static int Char = 5;
+        public const int Int = 1;
+        public const int Float = 2;
+        public const int String = 3;
+        public const int Bool = 4;
+        public const int Char = 5;
 
         /// <summary>
         /// Convierte un string a el numero de tipo de dato correspondiente
@@ -40,5 +40,6 @@ namespace PLearning_Backend.Enumerations
                     return -1;
             }
         }
+
     }
 }

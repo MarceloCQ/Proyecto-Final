@@ -1,13 +1,14 @@
 program Marcelo;
-int u = 8;
-function int uno (int p, bool y)
-{
-	u = 8 + 7;
-}
 
 void main()
 {
-	int i, x, y = 8;
-	bool h, f, j = false;
-	int[5] p, o, z;
+	int x, y, z = 15;
+	z = x + y;
+
+	if (z > x)
+	{
+		z = z + 1;
+	}
+
+
 }

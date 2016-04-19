@@ -8,7 +8,7 @@ namespace PLearning_Backend.Model
     /// <summary>
     /// Clase cuádruplo que inlute el codigo de operación, los dos operandos y el temporal o salto, dependiendo del código de operación
     /// </summary>
-    class Quadruple
+    public class Quadruple
     {
         public int OperationCode { get; set; }
         public int Operand1 { get; set; }

@@ -1,0 +1,12 @@
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\bin\Debug\FrontEndTest.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\bin\Debug\FrontEndTest.pdb
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.csprojResolveAssemblyReference.cache
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\MainWindow.baml
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\MainWindow.g.cs
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\App.g.cs
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest_MarkupCompile.cache
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.g.resources
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.Properties.Resources.resources
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.csproj.GenerateResource.Cache
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\FrontEndTest\FrontEndTest\obj\Debug\FrontEndTest.pdb

@@ -69,7 +69,7 @@ public class Parser {
 
 Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos, la llave es el nombre del procedimiento
 	List<string> procedureList;								//Lista que sirve para mapear los procedimientos con un numero
-	Dictionary<string, Constant> constantTable;				//Diccionario de constantes, la llave es el valor de la constante
+	List<Constant> constantTable;							//Lista de constantes
 
 	Procedure actualProcedure;								//Apunta al procedimiento actual en el que se estÃ¡
 	int tipoActual;
@@ -169,11 +169,13 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	{
 		int virtualDir;							//Direccion virtual de la constante
 
-		//Si la constante ya se encuentra en el diccionario
-		if (constantTable.ContainsKey(t.val))
+		int index = constantTable.FindIndex(x => x.Name == t.val);
+
+		//Si la constante ya se encuentra la lista
+		if (index >= 0)
 		{	
 			//Se obtiene la direcciÃ³n virtual
-			virtualDir = constantTable[t.val].VirtualDir;
+			virtualDir = constantTable[index].VirtualDir;
 		}
 		//Si no se encuentra en el diccionario
 		else
@@ -185,12 +187,39 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Constant c = new Constant(t.val, virtualDir);
 
 			//Se inserta en la tabla de constantes
-			constantTable.Add(t.val, c);
+			constantTable.Add(c);
 		}
 		
 		//Se inserta la constante en la pila de operandos y en la pila de tipos
 		PilaOperandos.Push(virtualDir);
 		PTipos.Push(dataType);
+	}
+
+	private void tryToInsertArgument(int k, string id)
+	{
+		//Se saca el argumento junto con su tipo
+		int argument = PilaOperandos.Pop();
+		int argumentType = PTipos.Pop();
+
+		//Si el tipo de argumento no el mismo con el definido, se marca error.
+		if (k < procedureTable[id].Parameters.Count)
+		{
+			if (argumentType != procedureTable[id].Parameters[k])
+			{
+				SemErr("Error - Los tipos no coinciden con la funciÃ³n");
+				finishExecution();
+			}
+			else
+			{
+
+				//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
+				insertQuadruple(OperationCode.Param, argument, -1, k);
+			}
+		}
+		else
+		{
+			SemErr("El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
+		}
 	}
 
 	///<summary>
@@ -283,7 +312,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		Expect(6);
 		procedureTable = new Dictionary<string, Procedure>();			//Se inicializa la tabla de procedimientos
 		procedureList = new List<string>();								//Se inicializa la lista de procedimientos
-		constantTable = new Dictionary<string, Constant>(); 			//Se inicializa la tabla de constantes
+		constantTable = new List<Constant>(); 							//Se inicializa la lista de constantes
 		
 		Expect(1);
 		actualProcedure = new Procedure(t.val, ReturnType.Program);		//Se asgian como procedimiento actual al procedimiento global
@@ -303,6 +332,8 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			funcion();
 		}
 		main();
+		insertQuadruple(OperationCode.EndProg, -1, -1, -1);
+		
 	}
 
 	void vars() {
@@ -356,7 +387,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				} else SynErr(45);
 				foreach (int r in registros)
 				{
-				insertQuadruple(OperationCode.Assignment, constantTable[t.val].VirtualDir, -1, r);
+				
+				int index = constantTable.FindIndex(x => x.Name == t.val);
+				insertQuadruple(OperationCode.Assignment, constantTable[index].VirtualDir, -1, r);
 				}
 				
 				
@@ -402,7 +435,13 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		regresa();
 		int retType = ReturnType.toReturnType(t.val);
 		
+		bool hasReturn = false;
+		
+		
+		
 		Expect(1);
+		string functionName = t.val;
+		//Se revise que la funciÃ³n no haya sido previamente declarada en el diccionario de procedimientos
 		if (procedureTable.ContainsKey(t.val))
 		{
 		SemErr("Error - Funcion '" + t.val + "' previamente declarada");
@@ -452,6 +491,14 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			insertQuadruple(OperationCode.Return, ret, -1, -1);
 			}
 			
+			hasReturn = true;
+			
+			//Se genera un direcciÃ³n virtual para la funciÃ³n
+			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Global, retType);
+			
+			//Se aÃ±ade la funciÃ³n a la tabla de variables global
+			procedureTable[programID].VariableTable.Add(functionName, new Variable(functionName, retType, virtualDir));
+			
 			
 			
 			
@@ -459,6 +506,18 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		}
 		Expect(33);
 		insertQuadruple(OperationCode.Ret, -1, -1, -1);
+		
+		
+		//Si la funciÃ³n no es void y tiene return entonces hay error.
+		if (retType != ReturnType.Void && !hasReturn)
+		{
+		SemErr("Error - Una funciÃ³n que no es void tiene que tener return.");
+		finishExecution();
+		}
+		
+		//Se resetean los contadores para que sean locales a cada funciÃ³n
+		VirtualStructure.resetCounters();
+		
 		
 		
 	}
@@ -469,6 +528,11 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		actualProcedure = new Procedure("main", ReturnType.Main);
 		procedureTable.Add("main", actualProcedure);
 		procedureList.Add("main");
+		
+		//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
+		insertQuadruple(OperationCode.Era, findProcedure("main"), -1, -1);
+		
+		
 		
 		Expect(30);
 		Expect(31);
@@ -486,6 +550,8 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			estatuto();
 		}
 		Expect(33);
+		VirtualStructure.resetCounters();
+		
 	}
 
 	void tipo() {
@@ -870,9 +936,15 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			}
 			else
 			{
-			//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
-			insertQuadruple(OperationCode.Era, findProcedure(id), -1, -1);
-			
+			if (procedureTable[id].Type != 0)
+			{
+				SemErr("Error - La llamada a la funciÃ³n tiene que ser void");
+			}
+			else
+			{
+				//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
+				insertQuadruple(OperationCode.Era, findProcedure(id), -1, -1);
+			}
 			
 			}
 			
@@ -882,62 +954,23 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			
 			if (StartOf(4)) {
 				expresion();
-				int argument = PilaOperandos.Pop();
-				int argumentType = PTipos.Pop();
-				
-				//Si el tipo de argumento no el mismo con el definido, se marca error.
-				if (k < procedureTable[id].Parameters.Count)
-				{
-				if (argumentType != procedureTable[id].Parameters[k])
-				{
-					SemErr("Error - Los tipos no coinciden con la funciÃ³n");
-					finishExecution();
-				}
-				else
-				{
-					//Si el tipo es el mismo, se genera un cuadruplo param con el argumento y el numero de parametro
-					insertQuadruple(OperationCode.Param, argument, -1, k);
-				}
-				}
-				else
-				{
-				SemErr("El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
-				}
-				
-				
-				
+				tryToInsertArgument(k, id);
 				
 				while (la.kind == 28) {
 					Get();
 					k++;
 					
 					expresion();
-					argument = PilaOperandos.Pop();
-					argumentType = PTipos.Pop();
-					
-					//Verificar que la lista de parametros tenga la cantidad adecuada
-					if (k < procedureTable[id].Parameters.Count)
-					{
-					//Si el tipo de argumento no el mismo con el definido, se marca error.
-					if (argumentType != procedureTable[id].Parameters[k])
-					{
-						SemErr("Error - Los tipos no coinciden con la funciÃ³n");
-						finishExecution();
-					}
-					else
-					{
-						//Si el tipo es el mismo, se genera un cuadruplo param con el argumento y el numero de parametro
-						insertQuadruple(OperationCode.Param, argument, -1, k);
-					}
-					}
-					else
-					{
-					SemErr("El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
-					}
+					tryToInsertArgument(k, id);
 					
 				}
 			}
 			Expect(31);
+			if (k + 1 < procedureTable[id].Parameters.Count)
+			{
+			SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
+			}
+			
 			insertQuadruple(OperationCode.GoSub, findProcedure(id), procedureTable[id].InitialDir, -1);
 			
 		} else SynErr(55);
@@ -1078,14 +1111,58 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			
 			if (la.kind == 30) {
 				Get();
+				if (!procedureTable.ContainsKey(id))
+				{
+				//Se marca error de semÃ¡ntica
+				SemErr("Error - La funciÃ³n que se intenta llamar no existe.");
+				finishExecution();
+				}
+				else
+				{
+				if (procedureTable[id].Type == ReturnType.Void || procedureTable[id].Type == ReturnType.Program || procedureTable[id].Type == ReturnType.Main)
+				{
+					SemErr("Error - La funciÃ³n tiene que regresar algo para usarse como expresiÃ³n.");
+				}
+				else
+				{
+					//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
+					insertQuadruple(OperationCode.Era, findProcedure(id), -1, -1);
+				}
+				
+				}
+				
+				int k = 0; 					//Se inicializa el apuntador a parametros
+				
 				if (StartOf(4)) {
 					expresion();
+					tryToInsertArgument(k, id);
+					
 					while (la.kind == 28) {
 						Get();
+						k++;
+						
 						expresion();
+						tryToInsertArgument(k, id);
+						
 					}
 				}
 				Expect(31);
+				if (k + 1 < procedureTable[id].Parameters.Count)
+				{
+				SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
+				}
+				insertQuadruple(OperationCode.GoSub, findProcedure(id), procedureTable[id].InitialDir, -1);
+				
+				Variable funcVariable = procedureTable[programID].VariableTable[id];
+				
+				int temporal = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, funcVariable.Type);
+				PilaOperandos.Push(temporal);
+				PTipos.Push(funcVariable.Type);
+				insertQuadruple(OperationCode.Assignment, funcVariable.VirtualDir, -1, temporal);
+				
+				
+				
+				
 			} else if (la.kind == 34) {
 				cuantificador();
 			} else if (StartOf(7)) {

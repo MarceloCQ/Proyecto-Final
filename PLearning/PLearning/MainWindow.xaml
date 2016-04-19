@@ -1,0 +1,126 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PLearning" x:Class="PLearning.MainWindow"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        Title="MainWindow" Height="700" Width="1200" Loaded="Window_Loaded">
+   
+    <Window.Resources>
+        <System:Double x:Key="RenglonHeight">29</System:Double>
+        
+        <Style x:Key="EventsInterfazLinea" TargetType="{x:Type UserControl}">
+            <EventSetter Event="DragEnter" Handler="onDragEnterIntLinea"/>
+            <EventSetter Event="DragLeave" Handler="onDragLeaveIntLinea"/>
+            <EventSetter Event="Drop" Handler="onDropIntLinea"/>
+            <EventSetter Event="MouseMove" Handler="IntLinea_MouseMove"/>
+            <EventSetter Event="PreviewMouseLeftButtonDown" Handler="IntLinea_PreviewMouseLeftButtonDown"/>
+        </Style>
+        
+    </Window.Resources>
+
+    <Grid x:Name="gPrincipal">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width=".70*"/>
+            <ColumnDefinition Width=".30*"/>
+        </Grid.ColumnDefinitions>
+        <Grid x:Name="gInputOutput" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Rectangle Fill="Black" Grid.RowSpan="2" HorizontalAlignment="Left" Width="3"/>
+            <Rectangle Fill="Black" Grid.RowSpan="2" Height="3" VerticalAlignment="Center"/>
+        </Grid>
+        <Grid x:Name="gIDE">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.15*"/>
+                <RowDefinition Height="0.85*"/>
+            </Grid.RowDefinitions>
+
+            <Grid x:Name="gHeader">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.17*"/>
+                    <ColumnDefinition Width="0.83*"/>
+                </Grid.ColumnDefinitions>
+                <Rectangle Fill="Red" HorizontalAlignment="Right" Width="1"/>
+                <Viewbox>
+                <TextBlock RenderTransformOrigin="0.5,0.5" TextWrapping="Wrap" Text="PLearning" VerticalAlignment="Bottom" FontFamily="Architext">
+                        <TextBlock.RenderTransform>
+                        <RotateTransform Angle="-25"/>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+                </Viewbox>
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Image Grid.Column="0" Tag="{x:Static local:LineType.Vars}" Margin="10" HorizontalAlignment="Center" Source="Images/vars.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Grid.Column="1" Tag="{x:Static local:LineType.Function}" Margin="10" HorizontalAlignment="Center" Source="Images/funcion.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Grid.Column="2" Tag="{x:Static local:LineType.Call}" Margin="10" HorizontalAlignment="Center" Source="Images/llamada.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Grid.Column="3" Tag="{x:Static local:LineType.Assign}" Margin="10" HorizontalAlignment="Center" Source="Images/asignacion.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    
+                </Grid>
+
+
+            </Grid>
+            <Grid x:Name="gContent" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.17*"/>
+                    <ColumnDefinition Width="0.83*"/>
+                </Grid.ColumnDefinitions>
+                <Rectangle Fill="Red" HorizontalAlignment="Right" Width="1" Grid.Column="0"/>
+                <Rectangle Grid.ColumnSpan="2" Fill="#FF00B4FF" Height="1" VerticalAlignment="Top"/>
+                <ScrollViewer x:Name="svContent" Grid.ColumnSpan="2">
+
+                    <StackPanel x:Name="gEstatutos">
+                    
+
+                        
+                        <local:InterfazLinea LineNo="0" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Program" IndentLevel="1"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="1" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="2" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="3" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="4" Style="{StaticResource EventsInterfazLinea}"  Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="5" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="6" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="7" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Main" IsText="True" Text="main() {" IndentLevel="1"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="8" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="9" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="10" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="11" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="12" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="13" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="14" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="15" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="16" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="17" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Other" IsText="True" Text="}" IndentLevel="1"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="18" Style="{StaticResource EventsInterfazLinea}" Type="Add" Height="{StaticResource RenglonHeight}" AddClicked="AgregarPagina"></local:InterfazLinea>
+
+                    </StackPanel>
+
+                </ScrollViewer>
+                <Image x:Name="imTrashcan" Grid.Column="1" Source="Images/trashcan.png"  Height="60" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,35,10" AllowDrop="True" Drop="imTrashcan_Drop" DragEnter="imTrashcan_DragEnter" DragLeave="imTrashcan_DragLeave"/>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <Image Margin="10" Tag="{x:Static local:LineType.If}" Grid.Row="0" VerticalAlignment="Center" Source="Images/if.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Margin="10" Tag="{x:Static local:LineType.For}" Grid.Row="1" VerticalAlignment="Center" Source="Images/for.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Margin="10" Tag="{x:Static local:LineType.While}" Grid.Row="2" VerticalAlignment="Center" Source="Images/while.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Margin="10" Tag="{x:Static local:LineType.Write}" Grid.Row="3" VerticalAlignment="Center" Source="Images/write.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                    <Image Margin="10" Tag="{x:Static local:LineType.Read}" Grid.Row="4" VerticalAlignment="Center" Source="Images/read.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
+                </Grid>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

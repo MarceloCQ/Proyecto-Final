@@ -9,7 +9,7 @@ namespace PLearning_Backend.Model
     /// <summary>
     /// Clase variable que incluye su nombre, tipo y dirección virtual
     /// </summary>
-    class Variable
+    public class Variable
     {
         public string Name { get; set; }
         public int Type { get; set; }

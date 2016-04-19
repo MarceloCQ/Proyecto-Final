@@ -11,26 +11,27 @@ namespace PLearning_Backend.Enumerations
     /// </summary>
     public static class OperationCode
     {
-        public static int And = 0;
-        public static int Or = 1;
-        public static int MoreThan = 2;
-        public static int LessThan = 3;
-        public static int Different = 4;
-        public static int EqualComparison = 5;
-        public static int Sum = 6;
-        public static int Substraction = 7;
-        public static int Multiplication = 8;
-        public static int Division = 9;
-        public static int Assignment = 10;
-        public static int Goto = 11;
-        public static int GotoF = 12;
-        public static int Print = 13;
-        public static int ReadLine = 14;
-        public static int Era = 15;
-        public static int Param = 16;
-        public static int Ret = 17;
-        public static int Return = 18;
-        public static int GoSub = 19;
+        public const int And = 0;
+        public const int Or = 1;
+        public const int MoreThan = 2;
+        public const int LessThan = 3;
+        public const int Different = 4;
+        public const int EqualComparison = 5;
+        public const int Sum = 6;
+        public const int Substraction = 7;
+        public const int Multiplication = 8;
+        public const int Division = 9;
+        public const int Assignment = 10;
+        public const int Goto = 11;
+        public const int GotoF = 12;
+        public const int Print = 13;
+        public const int ReadLine = 14;
+        public const int Era = 15;
+        public const int Param = 16;
+        public const int Ret = 17;
+        public const int Return = 18;
+        public const int GoSub = 19;
+        public const int EndProg = 20;
 
         /// <summary>
         /// Método que se encarga de convertir un string a un código de operación
@@ -98,6 +99,7 @@ namespace PLearning_Backend.Enumerations
                 case 17: return "Ret";
                 case 18: return "Return";
                 case 19: return "GoSub";
+                case 20: return "EndProg";
                 default: return "Error";
 
             }
