@@ -1,11 +1,8 @@
 ﻿using PLearning_Backend.Enumerations;
 using PLearning_Backend.Model;
-using PLearning_Backend.Structures;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace PLearning_Backend
 {
@@ -13,7 +10,7 @@ namespace PLearning_Backend
     {
         static void printQuadruples(List<Quadruple> quadruples)
         {
-            StreamWriter escribe = new StreamWriter(@"C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\Cuadruplos.txt");
+            StreamWriter escribe = new StreamWriter(@"C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\output.txt");
             int i = 0;
             foreach (Quadruple q in quadruples)
             {
@@ -33,10 +30,13 @@ namespace PLearning_Backend
 
             Scanner scanner = new Scanner(nombre);
             Parser parser = new Parser(scanner);
-            Programa p = parser.Parse();
+            Programa p = null;
+            p = parser.Parse();
 
-            VirtualMachine vm = new VirtualMachine(p);
-            vm.Run();
+           printQuadruples(p.Quadruples);
+
+           VirtualMachine vm = new VirtualMachine(p);
+           vm.Run();
 
             if (parser.errors.count == 0)
             {

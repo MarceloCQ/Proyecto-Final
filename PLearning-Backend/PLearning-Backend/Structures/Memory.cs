@@ -1,4 +1,5 @@
 ﻿using PLearning_Backend.Enumerations;
+using PLearning_Backend.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,43 +46,42 @@ namespace PLearning_Backend.Structures
             TemporalChars = new char[size[VirtualStructure.VariableType.Temporal, DataType.Char]];
         }
 
-        public dynamic ReadValue(int vType, int dataType, int virtualDir)
+
+        public dynamic ReadValue(MemoryDir memDir)
         {
 
-            int realIndex = VirtualStructure.getRealIndex(vType, dataType, virtualDir);
-
-            if (vType == VirtualStructure.VariableType.Global || vType == VirtualStructure.VariableType.Local)
+            if (memDir.VariableType == VirtualStructure.VariableType.Global || memDir.VariableType == VirtualStructure.VariableType.Local)
             {
-                switch (dataType)
+                switch (memDir.DataType)
                 {
                     case DataType.Int:
-                        return VariableIntegers[realIndex];
+                        return VariableIntegers[memDir.RealDir];
                     case DataType.Float:
-                        return VariableFloats[realIndex];
+                        return VariableFloats[memDir.RealDir];
                     case DataType.String:
-                        return VariableStrings[realIndex];
+                        return VariableStrings[memDir.RealDir];
                     case DataType.Char:
-                        return VariableChars[realIndex];
+                        return VariableChars[memDir.RealDir];
                     case DataType.Bool:
-                        return VariableBools[realIndex];
+                        return VariableBools[memDir.RealDir];
 
                 }
             }
-            else if (vType == VirtualStructure.VariableType.Temporal)
+            else if (memDir.VariableType == VirtualStructure.VariableType.Temporal)
             {
 
-                switch (dataType)
+                switch (memDir.DataType)
                 {
                     case DataType.Int:
-                        return TemporalIntegers[realIndex];
+                        return TemporalIntegers[memDir.RealDir];
                     case DataType.Float:
-                        return TemporalFloats[realIndex];
+                        return TemporalFloats[memDir.RealDir];
                     case DataType.String:
-                        return TemporalStrings[realIndex];
+                        return TemporalStrings[memDir.RealDir];
                     case DataType.Char:
-                        return TemporalChars[realIndex];
+                        return TemporalChars[memDir.RealDir];
                     case DataType.Bool:
-                        return TemporalBools[realIndex];
+                        return TemporalBools[memDir.RealDir];
 
                 }
             }
@@ -96,51 +96,50 @@ namespace PLearning_Backend.Structures
             
         }
 
-        public void WriteValue(int vType, int dataType, int virtualDir, dynamic value)
+        public void WriteValue(MemoryDir memDir, dynamic value)
         {
-            int realIndex = VirtualStructure.getRealIndex(vType, dataType, virtualDir);
 
-            if (vType == VirtualStructure.VariableType.Global || vType == VirtualStructure.VariableType.Local)
+            if (memDir.VariableType == VirtualStructure.VariableType.Global || memDir.VariableType == VirtualStructure.VariableType.Local)
             {
-                switch (dataType)
+                switch (memDir.DataType)
                 {
                     case DataType.Int:
-                        VariableIntegers[realIndex] = value;
+                        VariableIntegers[memDir.RealDir] = value;
                         break;
                     case DataType.Float:
-                        VariableFloats[realIndex] = value;
+                        VariableFloats[memDir.RealDir] = value;
                         break;
                     case DataType.String:
-                        VariableStrings[realIndex] = value;
+                        VariableStrings[memDir.RealDir] = value;
                         break;
                     case DataType.Char:
-                        VariableChars[realIndex] = value;
+                        VariableChars[memDir.RealDir] = value;
                         break;
                     case DataType.Bool:
-                        VariableBools[realIndex] = value;
+                        VariableBools[memDir.RealDir] = value;
                         break;
 
                 }
             }
-            else if (vType == VirtualStructure.VariableType.Temporal)
+            else if (memDir.VariableType == VirtualStructure.VariableType.Temporal)
             {
 
-                switch (dataType)
+                switch (memDir.DataType)
                 {
                     case DataType.Int:
-                        TemporalIntegers[realIndex] = value;
+                        TemporalIntegers[memDir.RealDir] = value;
                         break;
                     case DataType.Float:
-                        TemporalFloats[realIndex] = value;
+                        TemporalFloats[memDir.RealDir] = value;
                         break;
                     case DataType.String:
-                        TemporalStrings[realIndex] = value;
+                        TemporalStrings[memDir.RealDir] = value;
                         break;
                     case DataType.Char:
-                        TemporalChars[realIndex] = value;
+                        TemporalChars[memDir.RealDir] = value;
                         break;
                     case DataType.Bool:
-                        TemporalBools[realIndex] = value;
+                        TemporalBools[memDir.RealDir] = value;
                         break;
 
                 }
@@ -151,7 +150,7 @@ namespace PLearning_Backend.Structures
             }
 
             
-        }
+         }
 
 
     }

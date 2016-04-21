@@ -130,7 +130,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	/// <summary>
     /// MÃ©todo que sirve para intentar insertar una variable en la pila de operandos 
     /// </summary>
-	private void tryToInsertVariable()
+	private Variable tryToInsertVariable()
 	{
 		//Si la variable no estÃ¡ en la tabla de variables del procedimiento correspondiente
 		if (!actualProcedure.VariableTable.ContainsKey(t.val))
@@ -149,6 +149,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				Variable v = procedureTable[programID].VariableTable[t.val];
 				PilaOperandos.Push(v.VirtualDir);
 				PTipos.Push(v.Type);
+				return v;
 			}
 			
 		}
@@ -159,17 +160,20 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Variable v = actualProcedure.VariableTable[t.val];
 			PilaOperandos.Push(v.VirtualDir);
 			PTipos.Push(v.Type);
+			return v;
 		}
+
+		return null;
 	}
 
 	/// <summary>
     /// MÃ©todo que sirve para intentar insertar una constante en la pila de operandos 
     /// </summary>
-	private void tryToInsertConstant(int dataType)
+	private void tryToInsertConstant(int dataType, string val)
 	{
 		int virtualDir;							//Direccion virtual de la constante
 
-		int index = constantTable.FindIndex(x => x.Name == t.val);
+		int index = constantTable.FindIndex(x => x.Name == val);
 
 		//Si la constante ya se encuentra la lista
 		if (index >= 0)
@@ -184,7 +188,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Constant, dataType);
 
 			//Se crea la nueva constante
-			Constant c = new Constant(t.val, virtualDir);
+			Constant c = new Constant(val, virtualDir);
 
 			//Se inserta en la tabla de constantes
 			constantTable.Add(c);
@@ -202,9 +206,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		int argumentType = PTipos.Pop();
 
 		//Si el tipo de argumento no el mismo con el definido, se marca error.
-		if (k < procedureTable[id].Parameters.Count)
+		if (k < procedureTable[id].ParametersType.Count)
 		{
-			if (argumentType != procedureTable[id].Parameters[k])
+			if (argumentType != procedureTable[id].ParametersType[k])
 			{
 				SemErr("Error - Los tipos no coinciden con la funciÃ³n");
 				finishExecution();
@@ -212,8 +216,8 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			else
 			{
 
-				//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
-				insertQuadruple(OperationCode.Param, argument, -1, k);
+				//Se aÃ±ade un nuevo cuadruplo "Param" con el numero de procedimiento
+				insertQuadruple(OperationCode.Param, argument, -1, procedureTable[id].ParametersDirs[k]);
 			}
 		}
 		else
@@ -236,6 +240,56 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		}
 
 		return -1;
+	}
+
+	private void processDimension(int dim, Dimension d, Variable vDim)
+	{
+
+		if (PTipos.Peek() != DataType.Int)
+		{
+			SemErr("Error - El indexamiento para arreglos necesita ser de tipo entero.");
+			finishExecution();
+		}
+
+		insertQuadruple(OperationCode.Verify, PilaOperandos.Peek(), -1, d.Dim);
+
+		if (dim + 1 < vDim.Dimensions.Count)
+		{
+			int s = PilaOperandos.Pop();
+			int sTipo = PTipos.Pop();
+
+			int vTemp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
+
+			tryToInsertConstant(DataType.Int, d.M.ToString());
+
+			int virtualDir = PilaOperandos.Pop();
+			PTipos.Pop();
+
+			insertQuadruple(OperationCode.Multiplication, s, virtualDir, vTemp);
+			PilaOperandos.Push(vTemp);
+			PTipos.Push(DataType.Int);
+
+			
+		}
+
+		if (dim > 0)
+		{
+			int aux2 = PilaOperandos.Pop();
+			int aux1 = PilaOperandos.Pop();
+
+			int tAux2 = PTipos.Pop();
+			int tAux1 = PTipos.Pop();
+
+			int vTemp2 = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
+
+			insertQuadruple(OperationCode.Sum, aux1, aux2, vTemp2);
+
+			PilaOperandos.Push(vTemp2);
+			PTipos.Push(DataType.Int);
+
+		}
 	}
 
 	///<summary>
@@ -397,33 +451,68 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		} else if (la.kind == 34) {
 			Get();
 			Expect(2);
+			List<int> dimensions = new List<int>();
+			int dim = int.Parse(t.val);
+			dimensions.Add(dim);
+			int r = dim;
+			
 			if (la.kind == 28) {
 				Get();
 				Expect(2);
+				dim = int.Parse(t.val);
+				dimensions.Add(dim);
+				r *= dim;
+				
+				if (la.kind == 28) {
+					Get();
+					Expect(2);
+					dim = int.Parse(t.val);
+					dimensions.Add(dim);
+					r *= dim;
+					
+				}
 			}
 			Expect(35);
 			Expect(1);
+			int tam = r;
+			//Si la variable dimensionada se encuentra en la tabla de variables se marca error
 			if (actualProcedure.VariableTable.ContainsKey(t.val))
 			{
 			SemErr("Error - Variable '" + t.val + "' previamente declarada");
 			}
+			
 			//Si no, entonces se aÃ±ade a la tabla de variables
 			else
 			{
-			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
+			Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
+			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r);
+			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
+			
+			foreach(int dimension in dimensions)
+			{
+			r = r / dimension;
+			vDim.Dimensions.Add(new Dimension(dimension, r));
+			}
+			
+			actualProcedure.VariableTable.Add(t.val, vDim);
+			
 			}
 			
 			while (la.kind == 28) {
 				Get();
 				Expect(1);
-				if (actualProcedure.VariableTable.ContainsKey(t.val))
+				r = tam;
+				Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
+				VirtualStructure.reserveSpaces(scopeActual, tipoActual, r);
+				actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
+				
+				foreach(int dimension in dimensions)
 				{
-				SemErr("Error - Variable '" + t.val + "' previamente declarada");
+				r = r / dimension;
+				vDim.Dimensions.Add(new Dimension(dimension, r));
 				}
-				else
-				{
-				actualProcedure.VariableTable.Add(t.val, new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual)));
-				}
+				
+				actualProcedure.VariableTable.Add(t.val, vDim);
 				
 			}
 		} else SynErr(46);
@@ -435,12 +524,15 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		regresa();
 		int retType = ReturnType.toReturnType(t.val);
 		
+		
+		
 		bool hasReturn = false;
 		
 		
 		
 		Expect(1);
 		string functionName = t.val;
+		int virtualDir = -1;
 		//Se revise que la funciÃ³n no haya sido previamente declarada en el diccionario de procedimientos
 		if (procedureTable.ContainsKey(t.val))
 		{
@@ -452,6 +544,22 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		actualProcedure = new Procedure(t.val, retType);
 		procedureTable.Add(t.val, actualProcedure);
 		procedureList.Add(t.val);
+		
+		if (retType != ReturnType.Void)
+		{
+			//Se genera un direcciÃ³n virtual para la funciÃ³n
+			virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Global, retType);
+		
+			//Se aÃ±ade la funciÃ³n a la tabla de variables global
+			procedureTable[programID].VariableTable.Add(functionName, new Variable(functionName, retType, virtualDir));
+		
+			//Se aÃ±ade al tamaÃ±o de lo global
+			procedureTable[programID].increaseCounter(VirtualStructure.VariableType.Local, retType);
+		
+		}
+		
+		
+		
 		}
 		
 		
@@ -487,17 +595,14 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			}
 			else
 			{
-			//Si si coincide se genera un nuevo cuÃ¡druplo
-			insertQuadruple(OperationCode.Return, ret, -1, -1);
-			}
-			
 			hasReturn = true;
 			
-			//Se genera un direcciÃ³n virtual para la funciÃ³n
-			int virtualDir = VirtualStructure.getNext(VirtualStructure.VariableType.Global, retType);
 			
-			//Se aÃ±ade la funciÃ³n a la tabla de variables global
-			procedureTable[programID].VariableTable.Add(functionName, new Variable(functionName, retType, virtualDir));
+			//Si si coincide se genera un nuevo cuÃ¡druplo
+			insertQuadruple(OperationCode.Assignment, ret, -1, virtualDir);
+			}
+			
+			
 			
 			
 			
@@ -529,13 +634,18 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		procedureTable.Add("main", actualProcedure);
 		procedureList.Add("main");
 		
+		//Se aÃ±ade un nuevo cuadruplo "Era" con el numero de procedimiento
+		insertQuadruple(OperationCode.Era, findProcedure("main"), 1, -1);
+		
+		
+		
 		Expect(30);
 		Expect(31);
 		Expect(32);
 		actualProcedure.InitialDir = quadruples.Count;
 		//Se saca la posiciÃ³n del goto y se rellena con la direcciÃ³n inicial
 		int got = PSaltos.Pop();
-		quadruples[got].TemporalRegorJump = quadruples.Count;
+		quadruples[got].TemporalRegorJump = quadruples.Count - 1;
 		
 		
 		while (StartOf(1)) {
@@ -566,11 +676,11 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	void ctelet() {
 		if (la.kind == 4) {
 			Get();
-			tryToInsertConstant(DataType.String);
+			tryToInsertConstant(DataType.String, t.val.Replace("\"", "").Replace(@"\n", "\n"));
 			
 		} else if (la.kind == 5) {
 			Get();
-			tryToInsertConstant(DataType.Char);
+			tryToInsertConstant(DataType.Char, t.val);
 			
 		} else SynErr(48);
 	}
@@ -578,11 +688,11 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	void ctenum() {
 		if (la.kind == 2) {
 			Get();
-			tryToInsertConstant(DataType.Int);
+			tryToInsertConstant(DataType.Int, t.val);
 			
 		} else if (la.kind == 3) {
 			Get();
-			tryToInsertConstant(DataType.Int);
+			tryToInsertConstant(DataType.Float, t.val);
 			
 		} else SynErr(49);
 	}
@@ -593,7 +703,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		} else if (la.kind == 25) {
 			Get();
 		} else SynErr(50);
-		tryToInsertConstant(DataType.Bool);
+		tryToInsertConstant(DataType.Bool, t.val);
 		
 	}
 
@@ -611,7 +721,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		}
 		tipo();
 		int type = DataType.toDataType(t.val);
-		actualProcedure.Parameters.Add(type);
+		actualProcedure.ParametersType.Add(type);
 		
 		Expect(1);
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
@@ -621,7 +731,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		else
 		{
 		//Si no, entonces se aÃ±ade se la tabla de variables y se incrementa el contador de tamaÃ±o
-		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type)));
+		int virtDir = VirtualStructure.getNext(scopeActual, type);
+		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, virtDir));
+		actualProcedure.ParametersDirs.Add(virtDir);
 		actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
 		}
 		
@@ -890,6 +1002,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			tryToInsertVariable();
 			
 			if (la.kind == 34) {
+				PilaOperandos.Pop();
+				PTipos.Pop();
+				
 				cuantificador();
 			}
 			Expect(29);
@@ -961,12 +1076,12 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				}
 			}
 			Expect(31);
-			if (k + 1 < procedureTable[id].Parameters.Count)
+			if (k + 1 < procedureTable[id].ParametersType.Count)
 			{
 			SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
 			}
 			
-			insertQuadruple(OperationCode.GoSub, findProcedure(id), procedureTable[id].InitialDir, -1);
+			insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
 			
 		} else SynErr(55);
 		Expect(27);
@@ -987,13 +1102,91 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	}
 
 	void cuantificador() {
+		string id = t.val;
+		int dim = 0;
+		Dimension d = null;
+		
+		Variable vDim = tryToInsertVariable();
+		
+		int dirBase = PilaOperandos.Pop();
+		int tipo = PTipos.Pop();
+		
+		if (vDim.Dimensions.Count == 0)
+		{
+		SemErr("Error - La variable que se intenta accesar no es dimensionada");
+		finishExecution();
+		}
+		else
+		{
+		dim = 0;
+		d = vDim.Dimensions[dim];
+		POper.Push(-1);
+		}
+		
+		
 		Expect(34);
 		expresion();
+		processDimension(dim, d, vDim);
+		
 		if (la.kind == 28) {
 			Get();
+			dim++;
+			
+			if (dim + 1 > vDim.Dimensions.Count)
+			{
+			SemErr("Error - El nÃºmero de dimensiones no coincide con lo declarado.");
+			finishExecution();
+			}
+			
+			d = vDim.Dimensions[dim];
+			
 			expresion();
+			processDimension(dim, d, vDim);
+			
+			if (la.kind == 28) {
+				Get();
+				dim++;
+				
+				if (dim + 1 > vDim.Dimensions.Count)
+				{
+				SemErr("Error - El nÃºmero de dimensiones no coincide con lo declarado.");
+				finishExecution();
+				}
+				
+				d = vDim.Dimensions[dim];
+				
+				expresion();
+				processDimension(dim, d, vDim);
+				
+			}
 		}
 		Expect(35);
+		if (dim + 1 != vDim.Dimensions.Count)
+		{
+		SemErr("Error - El nÃºmero de dimensiones no coincide con lo declarado.");
+		finishExecution();
+		}
+		
+		int aux1 = PilaOperandos.Pop();
+		int tAux1 = PTipos.Pop();
+		
+		
+		int vTemp3 = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
+		actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
+		
+		
+		tryToInsertConstant(DataType.Int, vDim.VirtualDir.ToString());
+		
+		int vDir = PilaOperandos.Pop();
+		PTipos.Pop();
+		
+		insertQuadruple(OperationCode.Sum, aux1, vDir, vTemp3);
+		PTipos.Push(vDim.Type);
+		
+		PilaOperandos.Push(-vTemp3);
+		
+		POper.Pop();
+		
 	}
 
 	void comparacion() {
@@ -1106,6 +1299,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			
 			if (la.kind == 30) {
 				Get();
+				POper.Push(-1);
+				
+				//Si el procedimiento no se encuentra en el diccionario de procedimientos
 				if (!procedureTable.ContainsKey(id))
 				{
 				//Se marca error de semÃ¡ntica
@@ -1142,19 +1338,22 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 					}
 				}
 				Expect(31);
-				if (k + 1 < procedureTable[id].Parameters.Count)
+				if (k + 1 < procedureTable[id].ParametersType.Count)
 				{
 				SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
 				}
-				insertQuadruple(OperationCode.GoSub, findProcedure(id), procedureTable[id].InitialDir, -1);
+				insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
 				
 				Variable funcVariable = procedureTable[programID].VariableTable[id];
 				
 				int temporal = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, funcVariable.Type);
+				actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, funcVariable.Type);
+				
 				PilaOperandos.Push(temporal);
 				PTipos.Push(funcVariable.Type);
 				insertQuadruple(OperationCode.Assignment, funcVariable.VirtualDir, -1, temporal);
 				
+				POper.Pop();
 				
 				
 				
@@ -1175,10 +1374,8 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		Get();
 		PLearning();
 		Expect(0);
-
-        return new Programa(procedureTable, procedureList, constantTable, quadruples);
-
-	}
+        return new Programa(programID, procedureTable, procedureList, constantTable, quadruples);
+    }
 	
 	static readonly bool[,] set = {
 		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},

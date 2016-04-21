@@ -1,4 +1,5 @@
 ﻿using PLearning_Backend.Enumerations;
+using PLearning_Backend.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace PLearning_Backend.Structures
         }
 
         //Matriz que almacena todas las direcciones iniciales de la memoria virtual
-        private static int[,] initialMatrixStructure = new int[4, 6] {
+        private static readonly int[,] initialMatrixStructure = new int[4, 6] {
                                                                          //NoUsado   //Int      //Float     //String    //Bool      //Char
                                                                         {-1,        10000,      12000,      14000,      16000,      18000},     //GLOBAL   
                                                                         {-1,        20000,      22000,      24000,      26000,      28000},     //LOCAL
@@ -35,7 +36,12 @@ namespace PLearning_Backend.Structures
 
 
         //Matriz que almacena todas las direcciones de la memoria virtual
-        private static int[,] matrixStructure = initialMatrixStructure;
+        private static int[,] matrixStructure = new int[4, 6];
+
+        static VirtualStructure()
+        {
+            matrixStructure = (int[,])initialMatrixStructure.Clone();
+        }
 
         /// <summary>
         /// Método que sirve para obtener la siguiente dirección virtual 
@@ -46,6 +52,11 @@ namespace PLearning_Backend.Structures
         public static int getNext(int variableType, int dataType)
         {
             return matrixStructure[variableType, dataType]++;
+        }
+
+        public static void reserveSpaces(int variableType, int dataType, int spaces)
+        {
+            matrixStructure[variableType, dataType] += spaces;
         }
 
         public static Tuple<int, int> getVTypeAndDType(int virtualDir)
@@ -92,9 +103,15 @@ namespace PLearning_Backend.Structures
             matrixStructure[VariableType.Temporal, DataType.Char] = initialMatrixStructure[VariableType.Temporal, DataType.Char];
         }
 
-        public static int getRealIndex(int vType, int dataType, int virtualDir)
+        public static MemoryDir getRealIndex(int virtualDir)
         {
-            return virtualDir - initialMatrixStructure[vType, dataType];
+            Tuple<int, int> VTypeAndDType = getVTypeAndDType(virtualDir);
+
+            int vType = VTypeAndDType.Item1;
+            int dataType = VTypeAndDType.Item2;
+            int realDir = virtualDir - initialMatrixStructure[vType, dataType];
+
+            return new MemoryDir(vType, dataType, realDir);
         }
 
     }

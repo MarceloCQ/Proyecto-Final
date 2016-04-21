@@ -32,6 +32,7 @@ namespace PLearning_Backend.Enumerations
         public const int Return = 18;
         public const int GoSub = 19;
         public const int EndProg = 20;
+        public const int Verify = 21;
 
         /// <summary>
         /// Método que se encarga de convertir un string a un código de operación
@@ -100,6 +101,7 @@ namespace PLearning_Backend.Enumerations
                 case 18: return "Return";
                 case 19: return "GoSub";
                 case 20: return "EndProg";
+                case 21: return "Verify";
                 default: return "Error";
 
             }

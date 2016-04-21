@@ -6,3 +6,9 @@ C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compilado
 C:\Users\Marcelo Surface\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-Backend\PLearning-Backend\obj\Debug\PLearning-Backend.exe
 C:\Users\Marcelo Surface\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-Backend\PLearning-Backend\obj\Debug\PLearning-Backend.pdb
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto Final\PLearning-Backend\PLearning-Backend\bin\Debug\PLearning-Backend.exe.config
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\bin\Debug\PLearning-Backend.exe.config
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\obj\Debug\PLearning-Backend.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\obj\Debug\PLearning-Backend.pdb
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\bin\Debug\PLearning-Backend.exe
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\bin\Debug\PLearning-Backend.pdb
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning-Backend\PLearning-Backend\obj\Debug\PLearning-Backend.csprojResolveAssemblyReference.cache

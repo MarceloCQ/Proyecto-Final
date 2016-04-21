@@ -13,6 +13,7 @@ namespace PLearning_Backend
         public Programa Program {get; set;}
         private int ProgramCounter { get; set; }
         private Stack<Memory> MemoryStack { get; set; }
+        private Stack<Memory> NewMemoryStack { get; set; }
         private Memory ActiveMemory { get; set; }
         private Memory GlobalMemory { get; set; }
         private Memory NewMemory { get; set; }
@@ -21,25 +22,34 @@ namespace PLearning_Backend
         {
             Program = prog;
             MemoryStack = new Stack<Memory>();
+            NewMemoryStack = new Stack<Memory>();
             ProgramCounter = 0;
         }
 
 
-        private dynamic readValue(int vType, int dType, int virtualDir)
+        private dynamic readValue(int virtualDir)
         {
-            switch (vType)
+
+            if (virtualDir < 0)
+            {
+                virtualDir = readValue(virtualDir * -1);
+            }
+
+            MemoryDir memDir = VirtualStructure.getRealIndex(virtualDir);
+
+            switch (memDir.VariableType)
             {
                 case VirtualStructure.VariableType.Global:
-                    return GlobalMemory.ReadValue(vType, dType, virtualDir);
+                    return GlobalMemory.ReadValue(memDir);
                 case VirtualStructure.VariableType.Local:                  
                 case VirtualStructure.VariableType.Temporal:
-                    return ActiveMemory.ReadValue(vType, dType, virtualDir);
+                    return ActiveMemory.ReadValue(memDir);
                 case VirtualStructure.VariableType.Constant:
                     int index = Program.ConstantTable.FindIndex(x => x.VirtualDir == virtualDir);
                     string constant = Program.ConstantTable[index].Name;
                     
 
-                    switch (dType)
+                    switch (memDir.DataType)
                     {
                         case DataType.Int:
                             return int.Parse(constant);
@@ -60,37 +70,31 @@ namespace PLearning_Backend
             return null;
         }
 
-        private void writeValue(int vType, int dType, int virtualDir, dynamic value)
+        private void writeValue(int virtualDir, dynamic value)
         {
-            switch (vType)
+            if (virtualDir < 0)
+            {
+                virtualDir = readValue(virtualDir * -1);
+            }
+
+            MemoryDir memDir = VirtualStructure.getRealIndex(virtualDir);
+
+            switch (memDir.VariableType)
             {
                 case VirtualStructure.VariableType.Global:
-                    GlobalMemory.WriteValue(vType, dType, virtualDir, value);
+                    GlobalMemory.WriteValue(memDir, value);
                     break;
                 case VirtualStructure.VariableType.Local:
                 case VirtualStructure.VariableType.Temporal:
-                    ActiveMemory.WriteValue(vType, dType, virtualDir, value);
+                    ActiveMemory.WriteValue(memDir, value);
                     break;
             }      
         }
 
         private void makeOperation(Quadruple quadruple)
         {
-            Tuple<int, int> VTypeAndDTypeOperand1 = VirtualStructure.getVTypeAndDType(quadruple.Operand1);
-            Tuple<int, int> VTypeAndDTypeOperand2 = VirtualStructure.getVTypeAndDType(quadruple.Operand2);
-            Tuple<int, int> VTypeAndDTypeTemporal = VirtualStructure.getVTypeAndDType(quadruple.TemporalRegorJump);
-
-            int vTypeOperand1 = VTypeAndDTypeOperand1.Item1;
-            int dTypeOperand1 = VTypeAndDTypeOperand1.Item2;
-
-            int vTypeOperand2 = VTypeAndDTypeOperand2.Item1;
-            int dTypeOperand2 = VTypeAndDTypeOperand2.Item2;
-
-            int vTypeOperandTemporal = VTypeAndDTypeTemporal.Item1;
-            int dTypeOperandTemporal = VTypeAndDTypeTemporal.Item2;
-
-            dynamic value1 = readValue(vTypeOperand1, dTypeOperand1, quadruple.Operand1);
-            dynamic value2 = readValue(vTypeOperand2, dTypeOperand2, quadruple.Operand2);
+            dynamic value1 = readValue(quadruple.Operand1);
+            dynamic value2 = readValue(quadruple.Operand2);
 
             dynamic res = null;
             switch (quadruple.OperationCode)
@@ -130,7 +134,7 @@ namespace PLearning_Backend
 
             if (res != null)
             {
-                writeValue(vTypeOperandTemporal, dTypeOperandTemporal, quadruple.TemporalRegorJump, res);
+                writeValue(quadruple.TemporalRegorJump, res);
             }
             else
             {
@@ -141,6 +145,9 @@ namespace PLearning_Backend
 
         public void Run()
         {
+
+            GlobalMemory = new Memory(Program.ProcedureTable[Program.Name].Size);
+
             List<Quadruple> quadruples = Program.Quadruples;
 
             Quadruple actQuadruple = quadruples[ProgramCounter];
@@ -166,18 +173,10 @@ namespace PLearning_Backend
 
                     case OperationCode.Assignment:
 
-                        Tuple<int, int> VTypeAndDTypeRight = VirtualStructure.getVTypeAndDType(actQuadruple.Operand1);
-                        Tuple<int, int> VTypeAndDTypeLeft = VirtualStructure.getVTypeAndDType(actQuadruple.TemporalRegorJump);
 
-                        int vTypeRight = VTypeAndDTypeRight.Item1;
-                        int dTypeRight = VTypeAndDTypeRight.Item2;
+                        dynamic res = readValue(actQuadruple.Operand1);
 
-                        int vTypeLeft = VTypeAndDTypeLeft.Item1;
-                        int dTypeLeft = VTypeAndDTypeLeft.Item2;
-
-                        dynamic res = readValue(vTypeRight, dTypeRight, actQuadruple.Operand1);
-
-                        writeValue(vTypeLeft, dTypeLeft, actQuadruple.TemporalRegorJump, res);
+                        writeValue(actQuadruple.TemporalRegorJump, res);
                         ProgramCounter++;
 
                         break;
@@ -194,9 +193,9 @@ namespace PLearning_Backend
                         int vTypeExp = VTypeAndDTypeExp.Item1;
                         int dTypeExp = VTypeAndDTypeExp.Item2;
 
-                        dynamic exp = readValue(vTypeExp, dTypeExp, actQuadruple.Operand1);
+                        dynamic exp = readValue( actQuadruple.Operand1);
 
-                        if (exp)
+                        if (!exp)
                         {
                             ProgramCounter = actQuadruple.TemporalRegorJump;
                         }
@@ -209,20 +208,77 @@ namespace PLearning_Backend
 
 
                     case OperationCode.Print:
+
+                        dynamic toPrint = readValue(actQuadruple.TemporalRegorJump);
+                        Console.Write(toPrint);
+                        ProgramCounter++;
+                        break;
                     case OperationCode.ReadLine:
                     case OperationCode.Era:
                         Procedure proc = Program.ProcedureTable[Program.ProcedureList[actQuadruple.Operand1]];
-                        NewMemory = new Memory(proc.Size);
+                        if (actQuadruple.Operand2 == 1)
+                        {
+                            ActiveMemory = new Memory(proc.Size); 
+                        }
+                        else
+                        {
+                            if (NewMemory != null)
+                            {
+                                NewMemoryStack.Push(NewMemory);
+                            }
+
+                            NewMemory = new Memory(proc.Size);
+                        }
+                        
+                        ProgramCounter++;
                         break;
                     case OperationCode.Param:
+
+                        MemoryDir memDir = VirtualStructure.getRealIndex(actQuadruple.TemporalRegorJump);
+
+                        dynamic resValue = readValue(actQuadruple.Operand1);
+
+                        NewMemory.WriteValue(memDir, resValue);
+
+                        ProgramCounter++;
+
+                        break;
                     case OperationCode.Return:
+                        break;
                     case OperationCode.Ret:
+                        ActiveMemory = MemoryStack.Pop();
+                        ProgramCounter = ActiveMemory.ReturnDir;
+
+                        if (NewMemoryStack.Count > 0)
+                        {
+                            NewMemory = NewMemoryStack.Pop();
+                        }
+
+                        break;
                     case OperationCode.GoSub:
+                        ActiveMemory.ReturnDir = ProgramCounter + 1;
                         MemoryStack.Push(ActiveMemory);
-                        NewMemory.ReturnDir = ProgramCounter + 1;
                         ActiveMemory = NewMemory;
+                        NewMemory = null;
                         ProgramCounter = actQuadruple.TemporalRegorJump;
 
+                        break;
+
+                    case OperationCode.Verify:
+
+                        dynamic rValue = readValue(actQuadruple.Operand1);
+
+
+                        if (rValue < 0 || rValue >= actQuadruple.TemporalRegorJump)
+                        {
+                            Console.WriteLine("Error - El indice de la variable está fuera del rango.");
+                            Console.ReadLine();
+                            Environment.Exit(0);
+
+                        }
+
+                        ProgramCounter++;
+                        
                         break;
 
                 }

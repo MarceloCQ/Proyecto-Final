@@ -228,25 +228,25 @@ public class Scanner {
 		start = new Hashtable(128);
 		for (int i = 65; i <= 90; ++i) start[i] = 1;
 		for (int i = 97; i <= 122; ++i) start[i] = 1;
-		for (int i = 48; i <= 57; ++i) start[i] = 27;
+		for (int i = 48; i <= 57; ++i) start[i] = 26;
 		start[34] = 4; 
-		start[39] = 7; 
-		start[59] = 10; 
-		start[44] = 11; 
-		start[61] = 28; 
-		start[40] = 12; 
-		start[41] = 13; 
-		start[123] = 14; 
-		start[125] = 15; 
-		start[91] = 16; 
-		start[93] = 17; 
-		start[43] = 18; 
-		start[45] = 19; 
-		start[42] = 20; 
-		start[47] = 21; 
-		start[62] = 22; 
-		start[60] = 23; 
-		start[33] = 24; 
+		start[39] = 6; 
+		start[59] = 9; 
+		start[44] = 10; 
+		start[61] = 27; 
+		start[40] = 11; 
+		start[41] = 12; 
+		start[123] = 13; 
+		start[125] = 14; 
+		start[91] = 15; 
+		start[93] = 16; 
+		start[43] = 17; 
+		start[45] = 18; 
+		start[42] = 19; 
+		start[47] = 20; 
+		start[62] = 21; 
+		start[60] = 22; 
+		start[33] = 23; 
 		start[Buffer.EOF] = -1;
 
 	}
@@ -373,65 +373,62 @@ public class Scanner {
 				if (ch >= '0' && ch <= '9') {AddCh(); goto case 3;}
 				else {t.kind = 3; break;}
 			case 4:
-				if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 5;}
+				if (ch <= '!' || ch >= '#' && ch <= 65535) {AddCh(); goto case 4;}
+				else if (ch == '"') {AddCh(); goto case 5;}
 				else {goto case 0;}
 			case 5:
-				if (ch >= '0' && ch <= '9' || ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z') {AddCh(); goto case 5;}
-				else if (ch == '"') {AddCh(); goto case 6;}
-				else {goto case 0;}
-			case 6:
 				{t.kind = 4; break;}
+			case 6:
+				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '&' || ch >= '(' && ch <= '[' || ch >= ']' && ch <= 65535) {AddCh(); goto case 7;}
+				else {goto case 0;}
 			case 7:
-				if (ch <= 9 || ch >= 11 && ch <= 12 || ch >= 14 && ch <= '&' || ch >= '(' && ch <= '[' || ch >= ']' && ch <= 65535) {AddCh(); goto case 8;}
+				if (ch == 39) {AddCh(); goto case 8;}
 				else {goto case 0;}
 			case 8:
-				if (ch == 39) {AddCh(); goto case 9;}
-				else {goto case 0;}
-			case 9:
 				{t.kind = 5; break;}
-			case 10:
+			case 9:
 				{t.kind = 27; break;}
-			case 11:
+			case 10:
 				{t.kind = 28; break;}
-			case 12:
+			case 11:
 				{t.kind = 30; break;}
-			case 13:
+			case 12:
 				{t.kind = 31; break;}
-			case 14:
+			case 13:
 				{t.kind = 32; break;}
-			case 15:
+			case 14:
 				{t.kind = 33; break;}
-			case 16:
+			case 15:
 				{t.kind = 34; break;}
-			case 17:
+			case 16:
 				{t.kind = 35; break;}
-			case 18:
+			case 17:
 				{t.kind = 36; break;}
-			case 19:
+			case 18:
 				{t.kind = 37; break;}
-			case 20:
+			case 19:
 				{t.kind = 38; break;}
-			case 21:
+			case 20:
 				{t.kind = 39; break;}
-			case 22:
+			case 21:
 				{t.kind = 40; break;}
-			case 23:
+			case 22:
 				{t.kind = 41; break;}
-			case 24:
-				if (ch == '=') {AddCh(); goto case 25;}
+			case 23:
+				if (ch == '=') {AddCh(); goto case 24;}
 				else {goto case 0;}
-			case 25:
+			case 24:
 				{t.kind = 42; break;}
-			case 26:
+			case 25:
 				{t.kind = 43; break;}
-			case 27:
+			case 26:
 				recEnd = pos; recKind = 2;
-				if (ch >= '0' && ch <= '9') {AddCh(); goto case 27;}
+				if (ch >= '0' && ch <= '9') {AddCh(); goto case 26;}
 				else if (ch == '.') {AddCh(); goto case 2;}
 				else {t.kind = 2; break;}
-			case 28:
+			case 27:
 				recEnd = pos; recKind = 29;
-				if (ch == '=') {AddCh(); goto case 26;}
+				if (ch == '=') {AddCh(); goto case 25;}
 				else {t.kind = 29; break;}
 
 		}

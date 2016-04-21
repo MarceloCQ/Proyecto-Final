@@ -114,6 +114,10 @@ namespace PLearning
                     }
                 }
             }
+            else if (e.Data.GetDataPresent("IntLinea"))
+            {
+
+            }
         }
 
         private void onDragLeaveIntLinea(object sender, DragEventArgs e)
@@ -302,6 +306,7 @@ namespace PLearning
             return check;
         }
 
+
         private void IntLinea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             startPoint = e.GetPosition(null);
@@ -324,7 +329,7 @@ namespace PLearning
             }
         }
 
-
+       
 
         private void imTrashcan_Drop(object sender, DragEventArgs e)
         {

@@ -14,6 +14,8 @@ namespace PLearning_Backend.Model
         public string Name { get; set; }
         public int Type { get; set; }
         public int VirtualDir { get; set; }
+        public List<Dimension> Dimensions { get; set;}
+        
 
 
         /// <summary>
@@ -27,6 +29,8 @@ namespace PLearning_Backend.Model
             Name = name;
             Type = type;
             VirtualDir = virtualDir;
+            Dimensions = new List<Dimension>();
+            
         }
 
         

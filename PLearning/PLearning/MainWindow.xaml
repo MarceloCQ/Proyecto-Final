@@ -87,7 +87,7 @@
                         <local:InterfazLinea LineNo="4" Style="{StaticResource EventsInterfazLinea}"  Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
                         <local:InterfazLinea LineNo="5" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
                         <local:InterfazLinea LineNo="6" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="7" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Main" IsText="True" Text="main() {" IndentLevel="1"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="7" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Main" IsText="True" Text="void main() {" IndentLevel="1"></local:InterfazLinea>
                         <local:InterfazLinea LineNo="8" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
                         <local:InterfazLinea LineNo="9" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
                         <local:InterfazLinea LineNo="10" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
