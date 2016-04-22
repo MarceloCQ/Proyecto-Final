@@ -1,0 +1,22 @@
+program Marcelo;
+function int fibonacci(int num)
+{
+	int res;
+	if (num < 3)
+	{
+		res = 1;
+	} 
+	else
+	{
+		res = fibonacci(num - 1) + fibonacci(num - 2);
+	}
+
+	return res;
+}
+
+
+void main()
+{
+	print(fibonacci(18));
+	print("\n");
+}

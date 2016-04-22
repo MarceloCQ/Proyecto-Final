@@ -11,7 +11,7 @@ namespace PLearning_Backend.Structures
     /// </summary>
     static class SemanticCube
     {
-        private static readonly int[, ,] semanticCube = new int[6, 6, 10];      //Cubo de 6 x 6 x 10 (5 tipos de datos mas el cero, 5 tipos de datos mas el cero y 10 códigos de operación correspondientes a operaciones
+        private static readonly int[, ,] semanticCube = new int[6, 6, 12];      //Cubo de 6 x 6 x 10 (5 tipos de datos mas el cero, 5 tipos de datos mas el cero y 10 códigos de operación correspondientes a operaciones
 
         /// <summary>
         /// Constructor del cubo semántico el cual solo se ejecuta la primera vez que el cubo es utilizado
@@ -37,6 +37,18 @@ namespace PLearning_Backend.Structures
             semanticCube[DataType.Int, DataType.Float, OperationCode.LessThan] = DataType.Bool;
             semanticCube[DataType.Float, DataType.Int, OperationCode.LessThan] = DataType.Bool;
             semanticCube[DataType.Float, DataType.Float, OperationCode.LessThan] = DataType.Bool;
+
+            // <=
+            semanticCube[DataType.Int, DataType.Int, OperationCode.LessThanEq] = DataType.Bool;
+            semanticCube[DataType.Int, DataType.Float, OperationCode.LessThanEq] = DataType.Bool;
+            semanticCube[DataType.Float, DataType.Int, OperationCode.LessThanEq] = DataType.Bool;
+            semanticCube[DataType.Float, DataType.Float, OperationCode.LessThanEq] = DataType.Bool;
+
+            // >=
+            semanticCube[DataType.Int, DataType.Int, OperationCode.MoreThanEq] = DataType.Bool;
+            semanticCube[DataType.Int, DataType.Float, OperationCode.MoreThanEq] = DataType.Bool;
+            semanticCube[DataType.Float, DataType.Int, OperationCode.MoreThanEq] = DataType.Bool;
+            semanticCube[DataType.Float, DataType.Float, OperationCode.MoreThanEq] = DataType.Bool;
 
             // !=
             semanticCube[DataType.Int, DataType.Int, OperationCode.Different] = DataType.Bool;

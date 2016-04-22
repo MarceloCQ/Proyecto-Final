@@ -21,18 +21,21 @@ namespace PLearning_Backend.Enumerations
         public const int Substraction = 7;
         public const int Multiplication = 8;
         public const int Division = 9;
-        public const int Assignment = 10;
-        public const int Goto = 11;
-        public const int GotoF = 12;
-        public const int Print = 13;
-        public const int ReadLine = 14;
-        public const int Era = 15;
-        public const int Param = 16;
-        public const int Ret = 17;
-        public const int Return = 18;
-        public const int GoSub = 19;
-        public const int EndProg = 20;
-        public const int Verify = 21;
+        public const int MoreThanEq = 10;
+        public const int LessThanEq = 11;
+        public const int Assignment = 12;
+        public const int Goto = 13;
+        public const int GotoF = 14;
+        public const int Print = 15;
+        public const int ReadLine = 16;
+        public const int Era = 17;
+        public const int Param = 18;
+        public const int Ret = 19;
+        public const int Return = 20;
+        public const int GoSub = 21;
+        public const int EndProg = 22;
+        public const int Verify = 23;
+
 
         /// <summary>
         /// Método que se encarga de convertir un string a un código de operación
@@ -66,6 +69,10 @@ namespace PLearning_Backend.Enumerations
                     return Division;
                 case "=":
                     return Assignment;
+                case ">=":
+                    return MoreThanEq;
+                case "<=":
+                    return LessThanEq;
                 default:
                     return -1;
             }
@@ -90,18 +97,20 @@ namespace PLearning_Backend.Enumerations
                 case 7: return "-";
                 case 8: return "*";
                 case 9: return "/";
-                case 10: return "=";
-                case 11: return "Goto";
-                case 12: return "GotoF";
-                case 13: return "Print";
-                case 14: return "Read";
-                case 15: return "Era";
-                case 16: return "Param";
-                case 17: return "Ret";
-                case 18: return "Return";
-                case 19: return "GoSub";
-                case 20: return "EndProg";
-                case 21: return "Verify";
+                case 10: return ">=";
+                case 11: return "<=";
+                case 12: return "=";
+                case 13: return "Goto";
+                case 14: return "GotoF";
+                case 15: return "Print";
+                case 16: return "Read";
+                case 17: return "Era";
+                case 18: return "Param";
+                case 19: return "Ret";
+                case 20: return "Return";
+                case 21: return "GoSub";
+                case 22: return "EndProg";
+                case 23: return "Verify";
                 default: return "Error";
 
             }

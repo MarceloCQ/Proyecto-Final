@@ -11,8 +11,7 @@ namespace PLearning_Backend.Model
         public int Type { get; set; }                               //Tipo de retorno o void del procedimiento
         public int InitialDir { get; set; }                         //Direccion de inicio del procedimiento
         public int[,] Size { get; set;}                             //Cantidad de variables que tiene el procedimiento
-        public List<int> ParametersType { get; set; }               //Lista de tipos parametros de procedimiento        
-        public List<int> ParametersDirs { get; set; }               //Lista de direcciones de parametros de un procedimiento
+        public List<Parameter> Parameters { get; set; }               //Lista parametros de procedimiento        
         public Dictionary<string, Variable> VariableTable { get; set; }     //Tabla de variables 
 
         /// <summary>
@@ -25,8 +24,7 @@ namespace PLearning_Backend.Model
             Name = name;
             Type = type;
             VariableTable = new Dictionary<string, Variable>();
-            ParametersType = new List<int>();
-            ParametersDirs = new List<int>();
+            Parameters = new List<Parameter>();
             Size = new int[3, 6];
         }
 

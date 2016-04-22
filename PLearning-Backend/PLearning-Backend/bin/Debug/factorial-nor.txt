@@ -1,0 +1,19 @@
+program Marcelo;
+function int factorial(int num)
+{
+	int i;
+	int acum = 1;
+	for (i = 2; i <= num; i + 1)
+	{
+		acum = acum * i;
+	}
+
+	return acum;
+}
+
+
+void main()
+{
+	print(factorial(5));
+	print("\n");
+}

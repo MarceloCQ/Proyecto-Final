@@ -52,9 +52,11 @@ public class Parser {
 	public const int _DIV = 39;
 	public const int _MAQUE = 40;
 	public const int _MEQUE = 41;
-	public const int _DIFERENTE = 42;
-	public const int _COMPARACION = 43;
-	public const int maxT = 44;
+	public const int _MAQUEEQ = 42;
+	public const int _MEQUEEQ = 43;
+	public const int _DIFERENTE = 44;
+	public const int _COMPARACION = 45;
+	public const int maxT = 46;
 
 	const bool _T = true;
 	const bool _x = false;
@@ -80,6 +82,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	Stack<int> PilaOperandos = new Stack<int>();			//Pila de operandos para la generaciÃ³n de cuÃ¡druplos
 	Stack<int> PTipos = new Stack<int>();					//Pila de tipos para la validaciÃ³n de semÃ¡ntica
 	Stack<int> PSaltos = new Stack<int>();					//Pila de saltos para guardar los Jumps o la referencia a un Goto/GotoF
+	Stack<string> PilaVarDim = new Stack<string>();			//Pila que guarda el nombre de las variables dimensionadas que se agregaron en la pila de operandos
 
 	List<Quadruple> quadruples = new List<Quadruple>();		//Lista de los cuÃ¡druplos del programa
 
@@ -105,6 +108,15 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		int tipo2 = PTipos.Pop();				//Se saca el tipo del operando del lado derecho de la pila de tipos
 		int operand1 = PilaOperandos.Pop();		//Se saca el operando del lado izquierdo de la pila de operandos
 		int tipo1 = PTipos.Pop();				//Se saca el tipo del operando del lado izquierdo de la pila de tipos
+
+
+
+		if (operand1 == -1 || operand2 == -1)
+		{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+
+		}
 
 		//Se obtiene el tipo resultante del cubo semÃ¡ntico al combinar ambos tipos con el operador
 		int newType = SemanticCube.getCombiningType(tipo1, tipo2, operat);  
@@ -147,8 +159,20 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			{
 				//Se mete la direcciÃ³n en la pila de operandos y el tipo en la pila de tipos.
 				Variable v = procedureTable[programID].VariableTable[t.val];
-				PilaOperandos.Push(v.VirtualDir);
+
+				if (v.Dimensions.Count > 0)
+				{
+					PilaOperandos.Push(-1);
+					PilaVarDim.Push(v.Name);
+
+				}
+				else
+				{
+					PilaOperandos.Push(v.VirtualDir);
+				}
+				
 				PTipos.Push(v.Type);
+
 				return v;
 			}
 			
@@ -158,7 +182,16 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		{
 			//Se mete la direcciÃ³n en la pila de operandos y el tipo en la pila de tipos.
 			Variable v = actualProcedure.VariableTable[t.val];
-			PilaOperandos.Push(v.VirtualDir);
+			if (v.Dimensions.Count > 0)
+			{
+				PilaOperandos.Push(-1);
+				PilaVarDim.Push(v.Name);
+
+			}
+			else
+			{
+				PilaOperandos.Push(v.VirtualDir);
+			}
 			PTipos.Push(v.Type);
 			return v;
 		}
@@ -206,19 +239,53 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		int argumentType = PTipos.Pop();
 
 		//Si el tipo de argumento no el mismo con el definido, se marca error.
-		if (k < procedureTable[id].ParametersType.Count)
+		if (k < procedureTable[id].Parameters.Count)
 		{
-			if (argumentType != procedureTable[id].ParametersType[k])
+			if (argumentType != procedureTable[id].Parameters[k].Type)
 			{
 				SemErr("Error - Los tipos no coinciden con la funciÃ³n");
 				finishExecution();
 			}
-			else
+
+			Variable v = null;
+			if (argument == -1)
 			{
+				v = actualProcedure.VariableTable[PilaVarDim.Pop()];
+
+				if (procedureTable[id].Parameters[k].Dimensions.Count != v.Dimensions.Count)
+				{
+					SemErr("Error - El numero de dimensiones en el parametro no coincide con lo declarado");
+					finishExecution();
+				}
+
+				int i = 0;
+				int tam = 1;
+				foreach (Dimension d in procedureTable[id].Parameters[k].Dimensions)
+				{
+					if (d.Dim != v.Dimensions[i].Dim)
+					{
+						SemErr("Error - El tamaÃ±o de la matriz dimensionada tiene que ser igual al declarado.");
+						finishExecution();
+					}
+
+					tam *= d.Dim;
+					i++;
+				}
 
 				//Se aÃ±ade un nuevo cuadruplo "Param" con el numero de procedimiento
-				insertQuadruple(OperationCode.Param, argument, -1, procedureTable[id].ParametersDirs[k]);
+				insertQuadruple(OperationCode.Param, v.VirtualDir, tam, procedureTable[id].Parameters[k].VirtualDir);					
+
+
+
 			}
+			else
+			{
+				//Se aÃ±ade un nuevo cuadruplo "Param" con el numero de procedimiento
+				insertQuadruple(OperationCode.Param, argument, -1, procedureTable[id].Parameters[k].VirtualDir);
+			}
+
+				
+			
 		}
 		else
 		{
@@ -257,6 +324,12 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		{
 			int s = PilaOperandos.Pop();
 			int sTipo = PTipos.Pop();
+
+			if (s == -1)
+			{
+				SemErr("Error - No se indexo la variable dimensionada.");
+				finishExecution();
+			}
 
 			int vTemp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
@@ -438,7 +511,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 					ctenum();
 				} else if (la.kind == 24 || la.kind == 25) {
 					ctebool();
-				} else SynErr(45);
+				} else SynErr(47);
 				foreach (int r in registros)
 				{
 				
@@ -485,7 +558,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			else
 			{
 			Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
-			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r);
+			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r - 1);
 			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
 			
 			foreach(int dimension in dimensions)
@@ -503,7 +576,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				Expect(1);
 				r = tam;
 				Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
-				VirtualStructure.reserveSpaces(scopeActual, tipoActual, r);
+				VirtualStructure.reserveSpaces(scopeActual, tipoActual, r - 1);
 				actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
 				
 				foreach(int dimension in dimensions)
@@ -515,7 +588,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				actualProcedure.VariableTable.Add(t.val, vDim);
 				
 			}
-		} else SynErr(46);
+		} else SynErr(48);
 		Expect(27);
 	}
 
@@ -586,6 +659,12 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			expresion();
 			int returnType = PTipos.Pop();
 			int ret = PilaOperandos.Pop();
+			
+			if (ret == -1)
+			{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+			}
 			
 			//Si el tipo de la expresiÃ³n no coincide con el tipo de retorno se marca error
 			if (returnType != retType)
@@ -670,7 +749,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Get();
 		} else if (la.kind == 13) {
 			Get();
-		} else SynErr(47);
+		} else SynErr(49);
 	}
 
 	void ctelet() {
@@ -682,7 +761,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Get();
 			tryToInsertConstant(DataType.Char, t.val);
 			
-		} else SynErr(48);
+		} else SynErr(50);
 	}
 
 	void ctenum() {
@@ -694,7 +773,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Get();
 			tryToInsertConstant(DataType.Float, t.val);
 			
-		} else SynErr(49);
+		} else SynErr(51);
 	}
 
 	void ctebool() {
@@ -702,7 +781,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			Get();
 		} else if (la.kind == 25) {
 			Get();
-		} else SynErr(50);
+		} else SynErr(52);
 		tryToInsertConstant(DataType.Bool, t.val);
 		
 	}
@@ -712,7 +791,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			tipo();
 		} else if (la.kind == 8) {
 			Get();
-		} else SynErr(51);
+		} else SynErr(53);
 	}
 
 	void parametro() {
@@ -721,26 +800,78 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		}
 		tipo();
 		int type = DataType.toDataType(t.val);
-		actualProcedure.ParametersType.Add(type);
 		
-		Expect(1);
-		if (actualProcedure.VariableTable.ContainsKey(t.val))
-		{
-		SemErr("Variable previamente declarada");
-		}
-		else
-		{
-		//Si no, entonces se aÃ±ade se la tabla de variables y se incrementa el contador de tamaÃ±o
-		int virtDir = VirtualStructure.getNext(scopeActual, type);
-		actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, virtDir));
-		actualProcedure.ParametersDirs.Add(virtDir);
-		actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
-		}
 		
-		if (la.kind == 34) {
+		if (la.kind == 1) {
 			Get();
+			if (actualProcedure.VariableTable.ContainsKey(t.val))
+			{
+			SemErr("Variable previamente declarada");
+			}
+			else
+			{
+			//Si no, entonces se aÃ±ade se la tabla de variables y se incrementa el contador de tamaÃ±o
+			int virtDir = VirtualStructure.getNext(scopeActual, type);
+			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, virtDir));
+			actualProcedure.Parameters.Add(new Parameter(type, virtDir));
+			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
+			}
+			
+		} else if (la.kind == 34) {
+			Get();
+			Expect(2);
+			List<int> dimensions = new List<int>();
+			int dim = int.Parse(t.val);
+			dimensions.Add(dim);
+			int r = dim;
+			
+			if (la.kind == 28) {
+				Get();
+				Expect(2);
+				dim = int.Parse(t.val);
+				dimensions.Add(dim);
+				r *= dim;
+				
+				if (la.kind == 28) {
+					Get();
+					Expect(2);
+					dim = int.Parse(t.val);
+					dimensions.Add(dim);
+					r *= dim;
+					
+				}
+			}
 			Expect(35);
-		}
+			Expect(1);
+			int tam = r;
+				//Si la variable dimensionada se encuentra en la tabla de variables se marca error
+			if (actualProcedure.VariableTable.ContainsKey(t.val))
+			{
+			SemErr("Error - Variable '" + t.val + "' previamente declarada");
+			}
+			
+			//Si no, entonces se aÃ±ade a la tabla de variables
+			else
+			{
+			Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
+			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r);
+			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
+			
+			Parameter p = new Parameter(type, vDim.VirtualDir);
+			p.Dimensions = vDim.Dimensions;
+			actualProcedure.Parameters.Add(p);
+			
+			foreach(int dimension in dimensions)
+			{
+				r = r / dimension;
+				vDim.Dimensions.Add(new Dimension(dimension, r));
+			}
+			
+			actualProcedure.VariableTable.Add(t.val, vDim);
+			
+			}
+			
+		} else SynErr(54);
 	}
 
 	void estatuto() {
@@ -752,7 +883,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			ciclos();
 		} else if (la.kind == 1) {
 			asignacionollamada();
-		} else SynErr(52);
+		} else SynErr(55);
 	}
 
 	void expresion() {
@@ -807,6 +938,12 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		{
 		//Si si es booleano entonces se saca el resultado de la expresiÃ³n
 		int res = PilaOperandos.Pop();
+		
+		if (res == -1)
+		{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+		}
 		//Se mete la posiciÃ³n del GotoF en la pila de Saltos
 		PSaltos.Push(quadruples.Count);
 		//Se genera el cuÃ¡druplo del GotoF con el resultado de la expresiÃ³n
@@ -842,6 +979,13 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		int ladoDer = PilaOperandos.Pop();
 		int ladoIzq = PilaOperandos.Pop();
 		
+		
+		if (ladoIzq == -1 || ladoDer == -1)
+		{
+			SemErr("Error - No se indexo la variable dimensionada.");
+		finishExecution();
+		}
+		
 		//Se obtiene el tipo resultante del lado izquierdo y del lado derecho, asÃ­ como el operador
 		int tipoDer = PTipos.Pop();
 		int tipoIzq = PTipos.Pop();
@@ -868,6 +1012,11 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		int res = PilaOperandos.Pop();										//Resultado de evaluar la expresiÃ³n del for
 		int tipo = PTipos.Pop();											//Se obtiene el tipo resultante de la expresiÃ³n
 		
+		if (res == -1)
+		{
+		SemErr("Error - No se indexo la variable dimensionada.");
+		finishExecution();
+		}
 		
 		//Se revisa que el tipo resultante sea booleano
 		if (tipo != DataType.Bool)
@@ -890,6 +1039,13 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		Expect(27);
 		expresion();
 		int res2 = PilaOperandos.Pop();													//Resultado de lo que cambia la variable
+		
+		if (res2 == -1)
+		{
+		SemErr("Error - No se indexo la variable dimensionada.");
+		finishExecution();
+		}
+		
 		insertQuadruple(OperationCode.Assignment, res2, -1, ladoIzq);					//Se asigna el resultado de la expresion a la variable de control
 		
 		//Se sacan todos los datos que habiamos metido de la pila de saltos para crear el goto a antes de la condicion y rellenar el Goto que se saltaba la expresion de
@@ -926,7 +1082,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			ciclowhile();
 		} else if (la.kind == 19) {
 			ciclofor();
-		} else SynErr(53);
+		} else SynErr(56);
 	}
 
 	void condicion() {
@@ -946,6 +1102,13 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		{
 		//Si si es, entonces se saca el resultado de la expresiÃ³n 
 		int res = PilaOperandos.Pop();
+		
+		if (res == -1)
+		{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+		}
+		
 		//Se aÃ±ade a la pila de saltos la posiciÃ³n del GotoF
 		PSaltos.Push(quadruples.Count);
 		//Se genera y aÃ±ade a la lista un nuevo cuÃ¡druplo GotoF con el resultado
@@ -981,12 +1144,26 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 		Expect(30);
 		expresion();
 		int resExp = PilaOperandos.Pop();
+		
+		if (resExp == -1)
+		{
+		SemErr("Error - No se indexo la variable dimensionada.");
+		finishExecution();
+		}
+		
 		insertQuadruple(OperationCode.Print, -1, -1, resExp);
 		
 		while (la.kind == 28) {
 			Get();
 			expresion();
 			resExp = PilaOperandos.Pop();
+			
+			if (resExp == -1)
+			{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+			}
+			
 			insertQuadruple(OperationCode.Print, -1, -1, resExp);
 			
 		}
@@ -1014,9 +1191,15 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				expresion();
 			} else if (la.kind == 22) {
 				lectura();
-			} else SynErr(54);
+			} else SynErr(57);
 			int ladoDer = PilaOperandos.Pop();
 			int ladoIzq = PilaOperandos.Pop();
+			
+			if (ladoDer == -1 || ladoIzq == -1)
+			{
+			SemErr("Error - No se indexo la variable dimensionada.");
+			finishExecution();
+			}
 			
 			//Se saca el tipo del lado derecho y el tipo de lado izquierdo de la asignaciÃ³n
 			int tipoDer = PTipos.Pop();
@@ -1076,14 +1259,14 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				}
 			}
 			Expect(31);
-			if (k + 1 < procedureTable[id].ParametersType.Count)
+			if (k + 1 < procedureTable[id].Parameters.Count)
 			{
 			SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
 			}
 			
 			insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
 			
-		} else SynErr(55);
+		} else SynErr(58);
 		Expect(27);
 	}
 
@@ -1192,19 +1375,36 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	void comparacion() {
 		exp();
 		if (StartOf(5)) {
-			if (la.kind == 40) {
+			switch (la.kind) {
+			case 40: {
 				Get();
-			} else if (la.kind == 41) {
+				break;
+			}
+			case 41: {
 				Get();
-			} else if (la.kind == 42) {
+				break;
+			}
+			case 42: {
 				Get();
-			} else {
+				break;
+			}
+			case 43: {
 				Get();
+				break;
+			}
+			case 44: {
+				Get();
+				break;
+			}
+			case 45: {
+				Get();
+				break;
+			}
 			}
 			POper.Push(OperationCode.toOperationCode(t.val));
 			
 			exp();
-			if (POper.Count > 0 && (POper.Peek() == OperationCode.MoreThan || POper.Peek() == OperationCode.LessThan || POper.Peek() == OperationCode.Different || POper.Peek() == OperationCode.EqualComparison))
+			if (POper.Count > 0 && (POper.Peek() == OperationCode.MoreThan || POper.Peek() == OperationCode.LessThan || POper.Peek() == OperationCode.MoreThanEq || POper.Peek() == OperationCode.LessThanEq || POper.Peek() == OperationCode.Different || POper.Peek() == OperationCode.EqualComparison))
 			{
 			//Se resuelve generando un cuadruplo
 			tryToGenerateQuadruple();
@@ -1283,7 +1483,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 				}
 			}
 			ctevar();
-		} else SynErr(56);
+		} else SynErr(59);
 	}
 
 	void ctevar() {
@@ -1338,7 +1538,7 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 					}
 				}
 				Expect(31);
-				if (k + 1 < procedureTable[id].ParametersType.Count)
+				if (k + 1 < procedureTable[id].Parameters.Count)
 				{
 				SemErr("Error - El numero de parametros no coindice con la declaraciÃ³n de la funciÃ³n");
 				}
@@ -1362,8 +1562,8 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			} else if (StartOf(7)) {
 				tryToInsertVariable();
 				
-			} else SynErr(57);
-		} else SynErr(58);
+			} else SynErr(60);
+		} else SynErr(61);
 	}
 
 
@@ -1378,14 +1578,14 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 	}
 	
 	static readonly bool[,] set = {
-		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_T,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_T, _x,_x},
-		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x},
-		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _x,_x}
+		{_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_x, _x,_x,_T,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_T,_T, _T,_T,_x,_x},
+		{_x,_T,_T,_T, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x},
+		{_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_T, _T,_x,_x,_T, _x,_x,_x,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_x,_x}
 
 	};
 } // end Parser
@@ -1441,23 +1641,26 @@ public class Errors {
 			case 39: s = "DIV expected"; break;
 			case 40: s = "MAQUE expected"; break;
 			case 41: s = "MEQUE expected"; break;
-			case 42: s = "DIFERENTE expected"; break;
-			case 43: s = "COMPARACION expected"; break;
-			case 44: s = "??? expected"; break;
-			case 45: s = "invalid vars"; break;
-			case 46: s = "invalid vars"; break;
-			case 47: s = "invalid tipo"; break;
-			case 48: s = "invalid ctelet"; break;
-			case 49: s = "invalid ctenum"; break;
-			case 50: s = "invalid ctebool"; break;
-			case 51: s = "invalid regresa"; break;
-			case 52: s = "invalid estatuto"; break;
-			case 53: s = "invalid ciclos"; break;
-			case 54: s = "invalid asignacionollamada"; break;
-			case 55: s = "invalid asignacionollamada"; break;
-			case 56: s = "invalid factor"; break;
-			case 57: s = "invalid ctevar"; break;
-			case 58: s = "invalid ctevar"; break;
+			case 42: s = "MAQUEEQ expected"; break;
+			case 43: s = "MEQUEEQ expected"; break;
+			case 44: s = "DIFERENTE expected"; break;
+			case 45: s = "COMPARACION expected"; break;
+			case 46: s = "??? expected"; break;
+			case 47: s = "invalid vars"; break;
+			case 48: s = "invalid vars"; break;
+			case 49: s = "invalid tipo"; break;
+			case 50: s = "invalid ctelet"; break;
+			case 51: s = "invalid ctenum"; break;
+			case 52: s = "invalid ctebool"; break;
+			case 53: s = "invalid regresa"; break;
+			case 54: s = "invalid parametro"; break;
+			case 55: s = "invalid estatuto"; break;
+			case 56: s = "invalid ciclos"; break;
+			case 57: s = "invalid asignacionollamada"; break;
+			case 58: s = "invalid asignacionollamada"; break;
+			case 59: s = "invalid factor"; break;
+			case 60: s = "invalid ctevar"; break;
+			case 61: s = "invalid ctevar"; break;
 
 			default: s = "error " + n; break;
 		}

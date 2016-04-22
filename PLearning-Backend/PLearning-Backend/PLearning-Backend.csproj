@@ -50,6 +50,7 @@
     <Compile Include="Model\Constant.cs" />
     <Compile Include="Model\Dimension.cs" />
     <Compile Include="Model\MemoryDir.cs" />
+    <Compile Include="Model\Parameter.cs" />
     <Compile Include="Model\Procedure.cs" />
     <Compile Include="Model\Programa.cs" />
     <Compile Include="Model\Quadruple.cs" />

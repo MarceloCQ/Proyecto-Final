@@ -129,6 +129,12 @@ namespace PLearning_Backend
                 case OperationCode.LessThan:
                     res = value1 < value2;
                     break;
+                case OperationCode.MoreThanEq:
+                    res = value1 >= value2;
+                    break;
+                case OperationCode.LessThanEq:
+                    res = value1 <= value2;
+                    break;
 
             }
 
@@ -166,6 +172,8 @@ namespace PLearning_Backend
                     case OperationCode.Different:
                     case OperationCode.MoreThan:
                     case OperationCode.LessThan:
+                    case OperationCode.MoreThanEq:
+                    case OperationCode.LessThanEq:
 
                         makeOperation(actQuadruple);
                         ProgramCounter++;
@@ -234,11 +242,26 @@ namespace PLearning_Backend
                         break;
                     case OperationCode.Param:
 
-                        MemoryDir memDir = VirtualStructure.getRealIndex(actQuadruple.TemporalRegorJump);
+                        if (actQuadruple.Operand2 == -1)
+                        {
+                            MemoryDir memDir = VirtualStructure.getRealIndex(actQuadruple.TemporalRegorJump);
 
-                        dynamic resValue = readValue(actQuadruple.Operand1);
+                            dynamic resValue = readValue(actQuadruple.Operand1);
 
-                        NewMemory.WriteValue(memDir, resValue);
+                            NewMemory.WriteValue(memDir, resValue);
+                        }
+                        else
+                        {
+                            for (int i = 0; i < actQuadruple.Operand2; i++)
+                            {
+                                MemoryDir memDir = VirtualStructure.getRealIndex(actQuadruple.TemporalRegorJump + i);
+
+                                dynamic resValue = readValue(actQuadruple.Operand1 + i);
+
+                                NewMemory.WriteValue(memDir, resValue);
+                            }
+                        }
+                        
 
                         ProgramCounter++;
 

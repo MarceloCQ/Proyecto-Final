@@ -1,0 +1,22 @@
+program Marcelo;
+function int factorial(int num)
+{
+	int res;
+	if (num < 2)
+	{
+		res = 1;
+	} 
+	else
+	{
+		res = num * factorial(num - 1);
+	}
+
+	return res;
+}
+
+
+void main()
+{
+	print(factorial(10));
+	print("\n");
+}

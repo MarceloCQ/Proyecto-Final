@@ -1,0 +1,30 @@
+program Marcelo;
+int[5,5] x;
+
+
+void main()
+{
+	
+	int i, j;
+	for (i = 0; i < 5; i + 1)
+	{
+		for (j = 0; j < 5; j + 1)
+		{
+			x[i, j] = i * j;
+		}
+	}
+
+	for (i = 0; i < 5; i + 1)
+	{
+		for (j = 0; j < 5; j + 1)
+		{
+			print(x[i, j], " ");
+		}
+
+		print("\n");
+	}
+
+	print(x[x[1, 4] - 1, x[2,1]]);
+
+
+}

@@ -1,0 +1,114 @@
+program Marcelo;
+int[100] arr;
+int[100] arrOrd;
+int cont = 0;
+int tam;
+
+function void Une(int inicio, int mitad, int final)
+{
+	int i, j, k, p, h;
+	i = inicio; 
+	j = mitad+1; 
+	k = inicio;
+
+    while (i <= mitad and j <= final)
+    {
+        if (arr[i] < arr[j])
+        {
+            arrOrd[k] = arr[i];
+            i = i + 1;
+        }
+        else
+        {
+            arrOrd[k] = arr[j];
+            cont = cont + (mitad + 1 - i);
+            j = j + 1;
+        }
+        k = k + 1;
+    }
+
+    if (i > mitad)
+    {
+        for (p = j; p <= final; p + 1)
+        {
+            arrOrd[k] = arr[p];
+            k = k + 1;
+        }
+    }
+    else
+    {
+        for (p = i; p <= mitad; p + 1)
+        {
+            arrOrd[k] = arr[p];
+            k = k + 1;
+        }
+    }
+
+    for(h = inicio; h <= final; h + 1)
+    {
+        arr[h] = arrOrd[h];
+    }
+
+}
+
+function int mitad (int inicio, int fin)
+{
+	float m;
+	int i, res;
+	m = (inicio + fin) / 2;
+
+	for (i = inicio; i <= fin; i + 1)
+	{
+		if (i > m)
+		{
+			res = i;
+			i = fin + 1;
+		}
+	}
+
+	return res - 1;
+
+}
+
+function void MergeSort(int inicio, int fin)
+{
+    int m;
+    if (inicio < fin)
+    {
+        m = mitad(inicio, fin);
+        MergeSort(inicio, m);
+        MergeSort(m+1, fin);
+        Une(inicio, m, fin);
+    }
+
+}
+
+void main()
+{
+	int i;
+
+	arr[0] = 7;
+	arr[1] = 82;
+	arr[2] = 25;
+	arr[3] = 24;
+	arr[4] = 41;
+	arr[5] = 6;
+	arr[6] = 8;
+	arr[7] = 76;
+	arr[8] = 30;
+	arr[9] = 14;
+	arr[10] = 50;
+
+	MergeSort(0, 10);
+
+
+	for (i = 0; i <= 10; i + 1 )
+	{
+		print(arrOrd[i], " ");
+	}
+
+
+
+	
+
+}
