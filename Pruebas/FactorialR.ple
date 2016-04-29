@@ -1,0 +1,25 @@
+Program^1^-1^program FactorialR ;^FactorialR^
+Function^1^10^function int factorial ( int num ) {^1^factorial^int num^
+Vars^2^-1^int res ;^0^?^?^?^?^res^?^?^?^?^
+If^2^5^if ( num < 2 ) {^num < 2^
+Assign^3^-1^res = 1 ;^res^1^
+Other^2^3^}^
+Else^2^8^else {^
+Assign^3^-1^res = num * factorial (num - 1) ;^res^num * factorial (num - 1)^
+Other^2^6^}^
+Return^2^-1^return res ; ^res^
+Other^1^1^}^
+Main^1^15^void main() {^
+Vars^2^-1^int x ;^0^?^?^?^?^x^?^?^?^?^
+Read^2^-1^x = read() ;^x^
+Write^2^-1^print ( factorial(x) ) ;^factorial(x)^
+Other^1^11^}^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^

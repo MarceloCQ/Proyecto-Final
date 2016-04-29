@@ -1,0 +1,18 @@
+Program^1^-1^program lala ;^lala^
+Function^1^5^function int suma ( int x, int y ) {^1^suma^int x, int y^
+None^2^-1^
+None^2^-1^
+Return^2^-1^return x + y ; ^x + y^
+Other^1^1^}^
+None^1^-1^
+Main^1^17^void main() {^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+Other^1^7^}^

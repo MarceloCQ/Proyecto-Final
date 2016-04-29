@@ -1,0 +1,76 @@
+Program^1^-1^program MergeSort ;^MergeSort^
+Vars^1^-1^int [ 100 ]  arr, arrOrd ;^0^100^arr, arrOrd^?^?^?^?^
+Vars^1^-1^int cont, tam = 0  ;^0^?^?^?^?^cont, tam^0^
+Function^1^38^function void une ( int inicio, int mitad, int final ) {^0^une^int inicio, int mitad, int final^
+Vars^2^-1^int i, j, k, p, h ;^0^?^?^?^?^i, j, k, p, h^?^?^?^?^
+Assign^2^-1^i = inicio ;^i^inicio^
+Assign^2^-1^j = mitad + 1 ;^j^mitad + 1^
+Assign^2^-1^k = inicio ;^k^inicio^
+None^2^-1^
+While^2^20^while ( i <= mitad and j <= final ) {^i <= mitad and j <= final^
+If^3^13^if ( arr[i] < arr[j] ) {^arr[i] < arr[j]^
+Assign^4^-1^arrOrd[k] = arr[i] ;^arrOrd[k]^arr[i]^
+Assign^4^-1^i = i + 1 ;^i^i + 1^
+Other^3^10^}^
+Else^3^18^else {^
+Assign^4^-1^arrOrd[k] = arr[j] ;^arrOrd[k]^arr[j]^
+Assign^4^-1^cont = cont + (mitad + 1 - i) ;^cont^cont + (mitad + 1 - i)^
+Assign^4^-1^j = j + 1 ;^j^j + 1^
+Other^3^14^}^
+Assign^3^-1^k = k + 1 ;^k^k + 1^
+Other^2^9^}^
+If^2^27^if ( i > mitad ) {^i > mitad^
+For^3^25^for ( p = j ; p <= final ; p + 1 ) {^p = j^p <= final^p + 1^
+Assign^4^-1^arrOrd[k] = arr[p] ;^arrOrd[k]^arr[p]^
+Assign^4^-1^k = k + 1 ;^k^k + 1^
+Other^3^22^}^
+None^3^-1^
+Other^2^21^}^
+Else^2^34^else {^
+For^3^33^for ( p = i ; p <= mitad ; p + 1 ) {^p = i^p <= mitad^p + 1^
+Assign^4^-1^arrOrd[k] = arr[p] ;^arrOrd[k]^arr[p]^
+Assign^4^-1^k = k + 1 ;^k^k + 1^
+None^4^-1^
+Other^3^29^}^
+Other^2^28^}^
+For^2^37^for ( h = inicio ; h <= final ; h + 1 ) {^h = inicio^h <= final^h + 1^
+Assign^3^-1^arr[h] = arrOrd[h] ;^arr[h]^arrOrd[h]^
+Other^2^35^}^
+Other^1^3^}^
+Function^1^50^function int mitad ( int inicio, int fin ) {^1^mitad^int inicio, int fin^
+Vars^2^-1^float m ;^1^?^?^?^?^m^?^?^?^?^
+Vars^2^-1^int i, res ;^0^?^?^?^?^i, res^?^?^?^?^
+Assign^2^-1^m = (inicio + fin) / 2 ;^m^(inicio + fin) / 2^
+For^2^48^for ( i = inicio ; i <= fin ; i + 1 ) {^i = inicio^i <= fin^i + 1^
+If^3^47^if ( i > m ) {^i > m^
+Assign^4^-1^res = i ;^res^i^
+Assign^4^-1^i = fin + 1 ;^i^fin + 1^
+Other^3^44^}^
+Other^2^43^}^
+Return^2^-1^return res - 1 ; ^res - 1^
+Other^1^39^}^
+None^1^-1^
+Function^1^61^function void mergeSort ( int inicio, int fin ) {^0^mergeSort^int inicio, int fin^
+Vars^2^-1^int m ;^0^?^?^?^?^m^?^?^?^?^
+If^2^60^if ( inicio < fin ) {^inicio < fin^
+Assign^3^-1^m = mitad (inicio, fin) ;^m^mitad (inicio, fin)^
+Call^3^-1^mergeSort ( inicio, m ) ;^mergeSort^inicio, m^
+Call^3^-1^mergeSort ( m + 1, fin ) ;^mergeSort^m + 1, fin^
+Call^3^-1^une ( inicio, m, fin ) ;^une^inicio, m, fin^
+None^3^-1^
+Other^2^54^}^
+Other^1^52^}^
+Main^1^75^void main() {^
+Vars^2^-1^int num, i, aux ;^0^?^?^?^?^num, i, aux^?^?^?^?^
+Read^2^-1^num = read() ;^num^
+For^2^68^for ( i = 0 ; i < num ; i + 1 ) {^i = 0^i < num^i + 1^
+Assign^3^-1^aux = read() ;^aux^read()^
+Assign^3^-1^arr[i] = aux ;^arr[i]^aux^
+Other^2^65^}^
+Call^2^-1^mergeSort ( 0, num - 1 ) ;^mergeSort^0, num - 1^
+For^2^74^for ( i = 0 ; i < num ; i + 1 ) {^i = 0^i < num^i + 1^
+Write^3^-1^print ( arrOrd[i], " " ) ;^arrOrd[i], " "^
+None^3^-1^
+None^3^-1^
+Other^2^70^}^
+Other^1^62^}^

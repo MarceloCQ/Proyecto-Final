@@ -22,7 +22,6 @@ C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compilado
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.pdb
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\bin\Debug\PLearning.exe
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\bin\Debug\PLearning.pdb
-C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.csprojResolveAssemblyReference.cache
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\InterfazLinea.baml
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\InterfazLinea.g.cs
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\MainWindow.g.cs
@@ -34,3 +33,4 @@ C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compilado
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.g.resources
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.Properties.Resources.resources
 C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.csproj.GenerateResource.Cache
+C:\Users\Marcelo\OneDrive\Documentos\TEC\8. Octavo Semestre\Diseño de compiladores\Proyecto-Final\PLearning\PLearning\obj\Debug\PLearning.csprojResolveAssemblyReference.cache

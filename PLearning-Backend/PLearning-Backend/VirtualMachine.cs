@@ -221,7 +221,10 @@ namespace PLearning_Backend
                         Console.Write(toPrint);
                         ProgramCounter++;
                         break;
-                    case OperationCode.ReadLine:
+                    case OperationCode.Read:
+
+                        ProgramCounter++;
+                        break;
                     case OperationCode.Era:
                         Procedure proc = Program.ProcedureTable[Program.ProcedureList[actQuadruple.Operand1]];
                         if (actQuadruple.Operand2 == 1)
@@ -265,19 +268,25 @@ namespace PLearning_Backend
 
                         ProgramCounter++;
 
-                        break;
-                    case OperationCode.Return:
-                        break;
+                        break; 
                     case OperationCode.Ret:
+                        
+                        ProgramCounter = MemoryStack.Peek().ReturnDir;
+
+                        break;
+
+                    case OperationCode.EndFunc:
                         ActiveMemory = MemoryStack.Pop();
-                        ProgramCounter = ActiveMemory.ReturnDir;
 
                         if (NewMemoryStack.Count > 0)
                         {
                             NewMemory = NewMemoryStack.Pop();
                         }
 
+                        ProgramCounter++;
                         break;
+
+
                     case OperationCode.GoSub:
                         ActiveMemory.ReturnDir = ProgramCounter + 1;
                         MemoryStack.Push(ActiveMemory);
@@ -302,6 +311,16 @@ namespace PLearning_Backend
 
                         ProgramCounter++;
                         
+                        break;
+
+                    case OperationCode.Ref:
+
+                        dynamic value = readValue(actQuadruple.Operand1);
+
+                        MemoryDir memDir2 = VirtualStructure.getRealIndex(actQuadruple.Operand2);
+                        MemoryStack.Peek().WriteValue(memDir2, value);
+
+                        ProgramCounter++;
                         break;
 
                 }

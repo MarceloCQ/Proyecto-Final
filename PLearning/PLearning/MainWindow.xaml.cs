@@ -1,7 +1,14 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using PLearning_Backend;
+using PLearning_Backend.Model;
+using PLearning_Backend.Structures;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -21,6 +28,8 @@ namespace PLearning
     {
         private Point startPoint;
         private bool canDrop = false;
+        private int lineWithError = -1;
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -35,29 +44,7 @@ namespace PLearning
 
         public void AgregarPagina(object sender, EventArgs e)
         {
-            InterfazLinea oldReng = ((InterfazLinea)gEstatutos.Children[gEstatutos.Children.Count - 1]);
-            oldReng.Type = LineType.None;
-            oldReng.AddClicked -= AgregarPagina;
-
-            InterfazLinea newReng = null;
-
-            for (int i = 0; i  < 10; i++)
-            {
-                newReng = new InterfazLinea();
-                newReng.Height = 29;
-                newReng.Drop += onDropIntLinea;
-                newReng.DragEnter += onDragEnterIntLinea;
-                newReng.DragLeave += onDragLeaveIntLinea;
-                newReng.LineNo = InterfazLinea.LastLineNo;
-
-                InterfazLinea.LastLineNo++;
-
-                gEstatutos.Children.Add(newReng);
-            }
-
-            newReng.Type = LineType.Add;
-            newReng.AddClicked += AgregarPagina;
-
+            addLines(10);
         }
 
         private void Estatuto_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -86,36 +73,48 @@ namespace PLearning
 
         private void onDragEnterIntLinea(object sender, DragEventArgs e)
         {
+            e.Handled = true;
             if (e.Data.GetDataPresent("Estatuto"))
             {
 
                 InterfazLinea intLinea = sender as InterfazLinea;
                 LineType typeA = (LineType)e.Data.GetData("Estatuto");
 
-                if (!e.Data.GetDataPresent("Estatuto"))
+                if (intLinea.Type != LineType.None || !checkLine(typeA, intLinea.LineNo, -1))
                 {
+                    intLinea.Background = Brushes.OrangeRed;
+                    canDrop = false;
                     e.Effects = DragDropEffects.None;
                 }
                 else
                 {
-                    if (intLinea.Type != LineType.None || !checkLine(typeA, intLinea.LineNo))
-                    {
-                        intLinea.Background = Brushes.OrangeRed;
-                        canDrop = false;
-                        e.Effects = DragDropEffects.None;
-                    }
-                    else
-                    {
-
-                        intLinea.Background = Brushes.LightGreen;
-                        canDrop = true;
-
-
-                    }
+                    intLinea.Background = Brushes.LightGreen;
+                    canDrop = true;
                 }
+                
             }
             else if (e.Data.GetDataPresent("IntLinea"))
             {
+                InterfazLinea source = (InterfazLinea)e.Data.GetData("IntLinea");
+                InterfazLinea destination = sender as InterfazLinea;
+
+                if (source.Type == LineType.None)
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+                else if (source.Type == LineType.Program || destination.Type != LineType.None || !checkLine(source.Type, destination.LineNo, source.LineNo))
+                {
+                    destination.Background = Brushes.OrangeRed;
+                    canDrop = false;
+                    e.Effects = DragDropEffects.None;
+                }
+                else
+                {
+                    destination.Background = Brushes.LightGreen;
+                    canDrop = true;
+                }
+
+
 
             }
         }
@@ -124,7 +123,7 @@ namespace PLearning
         {
             InterfazLinea intLinea = sender as InterfazLinea;
 
-            if (e.Data.GetDataPresent("Estatuto"))
+            if (e.Data.GetDataPresent("Estatuto") || e.Data.GetDataPresent("IntLinea"))
             {
                 intLinea.Background = Brushes.Transparent;
 
@@ -133,7 +132,7 @@ namespace PLearning
 
         private void onDropIntLinea(object sender, DragEventArgs e)
         {
-            InterfazLinea intLinea = sender as InterfazLinea;
+            InterfazLinea intLineaDest = sender as InterfazLinea;
 
             if (e.Data.GetDataPresent("Estatuto"))
             {
@@ -141,48 +140,39 @@ namespace PLearning
                 {
                     
                     LineType typeA = (LineType)e.Data.GetData("Estatuto");
-                    intLinea.Type = typeA;
+                    intLineaDest.Type = typeA;
+                    processEst(intLineaDest, false);
+                }
 
-                    switch (intLinea.Type)
+                intLineaDest.Background = Brushes.Transparent;
+            }
+            else if (e.Data.GetDataPresent("IntLinea"))
+            {
+                if (canDrop)
+                {
+                    InterfazLinea intLineaSrc = (InterfazLinea)e.Data.GetData("IntLinea");
+
+                    InterfazLinea aux = intLineaSrc.Copy();
+                    removeLine(intLineaSrc.LineNo);
+
+                    copyLine(aux, intLineaDest.LineNo, false);
+
+                    if (intLineaDest.Type == LineType.Other && intLineaDest.Text == "}")
                     {
-                        case LineType.If:
-                        case LineType.While:
-                        case LineType.For:
-                        case LineType.Function:
-                            int i;
-                            for (i = 1; i <= 6; i++ )
-                            {
-                                InterfazLinea line = gEstatutos.Children[intLinea.LineNo + i] as InterfazLinea;
-
-                                if (line.Type != LineType.None || i == 6)
-                                {
-                                    i--;
-                                    break;
-                                }
-
-                                line.IndentLevel++;
-
-                            }
-
-                            InterfazLinea corchCi = gEstatutos.Children[intLinea.LineNo + i] as InterfazLinea;
-                            corchCi.LinkedTo = intLinea.LineNo;
-                            corchCi.IndentLevel--;
-                            corchCi.Type = LineType.Other;
-                            corchCi.IsText = true;
-                            corchCi.Text = "}";
-                            intLinea.LinkedTo = corchCi.LineNo;
-
-                                break;
+                        changeIndentation(aux, intLineaDest);
                     }
 
+                    processEst(intLineaDest, true);
+                    
 
                 }
 
-                intLinea.Background = Brushes.Transparent;
+                intLineaDest.Background = Brushes.Transparent;
             }
+
         }
 
-        private bool checkLine(LineType lineType, int destinationLine)
+        private bool checkLine(LineType lineType, int destinationLine, int sourceLine)
         {
             bool check = true;
 
@@ -194,14 +184,16 @@ namespace PLearning
                 case LineType.Write:
                     for (int i = destinationLine + 1; i < gEstatutos.Children.Count; i++)
                     {
-                        InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
+                        InterfazLinea intLinea = gEstatutos.Children[i] as InterfazLinea;
+                        LineType type = intLinea.Type;
 
-                        if (lineToCheck.Type != LineType.None)
+                        if (sourceLine == intLinea.LineNo) type = LineType.None;
+
+                        if (type != LineType.None)
                         {
-                            if (lineToCheck.Type == LineType.Main || lineToCheck.Type == LineType.Function || lineToCheck.Type == LineType.Add || lineToCheck.Type == LineType.Vars)
+                            if (type == LineType.Main || type == LineType.Function || type == LineType.Add || type == LineType.Vars)
                             {
-                                check = false; 
-                                
+                                check = false;                                
                             }
                             else
                             {
@@ -216,75 +208,45 @@ namespace PLearning
                 case LineType.While:
                 case LineType.If:
 
-                    if (((InterfazLinea)gEstatutos.Children[destinationLine + 1]).Type == LineType.None)
+                   
+
+                    for (int i = destinationLine + 1; i < gEstatutos.Children.Count; i++)
                     {
+                        InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
+                        LineType type = lineToCheck.Type;
 
-                        for (int i = destinationLine + 2; i < gEstatutos.Children.Count; i++)
+                        if (lineToCheck.LineNo == sourceLine) type = LineType.None;
+
+                        if (type != LineType.None)
                         {
-                            InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
-
-                            if (lineToCheck.Type != LineType.None)
+                            if (type == LineType.Main || type == LineType.Function || type == LineType.Add || type == LineType.Vars)
                             {
-                                if (lineToCheck.Type == LineType.Main || lineToCheck.Type == LineType.Function || lineToCheck.Type == LineType.Add || lineToCheck.Type == LineType.Vars)
-                                {
-                                    check = false;
-
-                                }
-                                else
-                                {
-                                    check = true;
-                                }
-                                break;
+                                check = false;                          
                             }
-
+                            else
+                            {
+                                check = true;
+                            }
+                            break;
                         }
                     }
-                    else
-                    {
-                        check = false;
-                    }
+                    
+                    
 
                     break;
                     
                 case LineType.Function:
-                    if (((InterfazLinea)gEstatutos.Children[destinationLine + 1]).Type == LineType.None)
-                    {
-                        for (int i = destinationLine + 2; i < gEstatutos.Children.Count; i++)
-                        {
-                            InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
 
-                            if (lineToCheck.Type != LineType.None)
-                            {
-                                if (lineToCheck.Type == LineType.Main || lineToCheck.Type == LineType.Function || lineToCheck.Type == LineType.Add)
-                                {
-                                    check = true;
-
-                                }
-                                else
-                                {
-                                    check = false;
-                                }
-                                break;
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        check = false;
-                    }
-
-
-                    break;
-
-                case LineType.Vars:
-                    for (int i = destinationLine - 1; i >= 0; i--)
+                    for (int i = destinationLine + 1; i < gEstatutos.Children.Count; i++)
                     {
                         InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
+                        LineType type = lineToCheck.Type;
+
+                        if (lineToCheck.LineNo == sourceLine) type = LineType.None;
 
                         if (lineToCheck.Type != LineType.None)
                         {
-                            if (lineToCheck.Type == LineType.Main || lineToCheck.Type == LineType.Function || lineToCheck.Type == LineType.Vars || lineToCheck.Type == LineType.Program)
+                            if (type == LineType.Main || type == LineType.Function || type == LineType.Add)
                             {
                                 check = true;
 
@@ -297,6 +259,66 @@ namespace PLearning
                         }
 
                     }
+                   
+
+
+                    break;
+
+                case LineType.Vars:
+                    for (int i = destinationLine - 1; i >= 0; i--)
+                    {
+                        InterfazLinea lineToCheck = gEstatutos.Children[i] as InterfazLinea;
+                        LineType type = lineToCheck.Type;
+
+                        if (lineToCheck.LineNo == sourceLine) type = LineType.None;
+
+
+                        if (type != LineType.None)
+                        {
+                            if (type == LineType.Main || type == LineType.Function || type == LineType.Vars || type == LineType.Program)
+                            {
+                                check = true;
+
+                            }
+                            else
+                            {
+                                check = false;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+
+                case LineType.Other:
+                case LineType.Main:
+                    if (sourceLine > destinationLine)
+                    {
+                        for (int i = sourceLine - 1; i > destinationLine; i--)
+                        {
+                            InterfazLinea linetocheck = gEstatutos.Children[i] as InterfazLinea;
+
+                            if (linetocheck.Type != LineType.None)
+                            {
+                                check = false;
+                                break;
+                            }
+
+                        }
+                    }
+                    else
+                    {
+                        for (int i = sourceLine + 1; i < destinationLine; i++)
+                        {
+                            InterfazLinea linetocheck = gEstatutos.Children[i] as InterfazLinea;
+
+                            if (linetocheck.Type != LineType.None)
+                            {
+                                check = false;
+                                break;
+                            }
+                        }
+                    }
+
                     break;
 
 
@@ -306,6 +328,276 @@ namespace PLearning
             return check;
         }
 
+        private void removeLine (int lineNo)
+        {
+
+            InterfazLinea intLinea = gEstatutos.Children[lineNo] as InterfazLinea;
+
+            if (intLinea.Type == LineType.While || intLinea.Type == LineType.For || intLinea.Type == LineType.If || intLinea.Type == LineType.Else)
+            {
+                for (int i = intLinea.LineNo + 1; i <= intLinea.LinkedTo; i++)
+                {
+                    InterfazLinea intLineaAux = ((InterfazLinea)gEstatutos.Children[i]);
+
+
+                    if (i == intLinea.LinkedTo)
+                    {
+                        intLineaAux.Type = LineType.None;
+                        intLineaAux.Text = "";
+                        intLineaAux.LinkedTo = -1;
+                    }
+                    else
+                    {
+                        intLineaAux.IndentLevel--;
+                    }
+
+                }
+
+                intLinea.LinkedTo = -1;
+
+            }
+            else if (intLinea.Type == LineType.Function)
+            {
+                for (int i = intLinea.LineNo + 1; i <= intLinea.LinkedTo; i++)
+                {
+                    InterfazLinea intLineaAux = ((InterfazLinea)gEstatutos.Children[i]);
+
+                    intLineaAux.Type = LineType.None;
+
+                    if (i != intLinea.LinkedTo)
+                    {
+                        intLineaAux.IndentLevel = intLinea.IndentLevel;
+                    }
+
+                }
+            }
+            else if (intLinea.Type == LineType.Main)
+            {
+                for (int i = intLinea.LineNo + 1; i < intLinea.LinkedTo; i++)
+                {
+                    InterfazLinea intLineaAux = ((InterfazLinea)gEstatutos.Children[i]);
+                    intLineaAux.IndentLevel--;                             
+                }              
+            }
+
+
+            intLinea.Type = LineType.None;
+        }
+
+        private void changeIndentation (InterfazLinea source, InterfazLinea destination)
+        {
+            if (source.LineNo > destination.LineNo)
+            {
+                for (int i = source.LineNo - 1; i >= destination.LineNo; i--)
+                {
+                    ((InterfazLinea)gEstatutos.Children[i]).IndentLevel--;
+                }
+            }
+            else
+            {
+                for (int i = source.LineNo; i < destination.LineNo; i++)
+                {
+                    ((InterfazLinea)gEstatutos.Children[i]).IndentLevel++;
+                }
+
+            }
+        }
+
+        private void copyLine(InterfazLinea source, int destLineNo, bool copyIndent)
+        {
+            InterfazLinea destination = gEstatutos.Children[destLineNo] as InterfazLinea;
+
+            destination.Type = source.Type;
+            destination.Text = source.Text;
+            destination.IsText = source.IsText;
+            destination.LinkedTo = source.LinkedTo;
+
+            if (destination.LinkedTo != - 1) (gEstatutos.Children[destination.LinkedTo] as InterfazLinea).LinkedTo = destination.LineNo;
+
+            if (copyIndent)
+            {
+                destination.IndentLevel = source.IndentLevel;
+                if (destination.Type == LineType.Other && destination.Text == "}")
+                {
+                    source.IndentLevel++;
+                }
+            }
+
+            int i = 0;
+            
+            if (!(source.Actual is Image))
+            {
+                if (source.Actual != null)
+                {
+                    foreach (UIElement childSrc in ((StackPanel)source.Actual).Children)
+                    {
+                        UIElement childDest = ((StackPanel)destination.Actual).Children[i] as UIElement;
+
+                        childDest.Visibility = childSrc.Visibility;
+
+                        if (childSrc is TextBox)
+                        {
+                            ((TextBox)childDest).Text = ((TextBox)childSrc).Text;
+                        }
+                        else if (childSrc is ComboBox)
+                        {
+                            ((ComboBox)childDest).SelectedIndex = ((ComboBox)childSrc).SelectedIndex;
+                        }
+
+                        i++;
+
+                    }
+                }
+            }
+
+
+        }
+
+        private void moveEverythingDown(int startLine)
+        {
+            addLines(1);
+            int numLines = gEstatutos.Children.Count;
+
+            for (int i = gEstatutos.Children.Count - 2; i > startLine; i--)
+            {
+                copyLine(gEstatutos.Children[i - 1] as InterfazLinea, i, true);
+                ((InterfazLinea)gEstatutos.Children[i - 1]).Type = LineType.None;
+
+            }
+
+
+        }
+
+        private void addLines (int numLines)
+        {
+            InterfazLinea oldReng = ((InterfazLinea)gEstatutos.Children[gEstatutos.Children.Count - 1]);
+            oldReng.Type = LineType.None;
+            oldReng.AddClicked -= AgregarPagina;
+
+            InterfazLinea newReng = null;
+
+            for (int i = 0; i < numLines; i++)
+            {
+                newReng = new InterfazLinea();
+                newReng.Height = 29;
+                newReng.SelectionChanged += FuncTypeSelectionChanged;
+                newReng.LineNo = InterfazLinea.LastLineNo;
+                newReng.Style = TryFindResource("EventsInterfazLinea") as Style;
+
+                InterfazLinea.LastLineNo++;
+
+                gEstatutos.Children.Add(newReng);
+            }
+
+            newReng.Type = LineType.Add;
+            newReng.AddClicked += AgregarPagina;
+        }
+
+        private void processEst (InterfazLinea intLinea, bool move)
+        {
+            switch (intLinea.Type)
+            {
+                case LineType.If:
+
+                    int i;
+                    for (i = 1; i <= 3; i++)
+                    {
+                        InterfazLinea line = gEstatutos.Children[intLinea.LineNo + i] as InterfazLinea;
+
+                        if (line.Type != LineType.None)
+                        {
+                            moveEverythingDown(line.LineNo);
+                        }
+
+                        if (i < 3) line.IndentLevel++;
+
+                    }
+
+                    i--;
+                    InterfazLinea corchCi = gEstatutos.Children[intLinea.LineNo + i] as InterfazLinea;
+                    corchCi.LinkedTo = intLinea.LineNo;
+                    corchCi.Type = LineType.Other;
+                    corchCi.IsText = true;
+                    corchCi.Text = "}";
+                    intLinea.LinkedTo = corchCi.LineNo;
+                    if (!move)
+                    {
+                        i++;
+                        InterfazLinea elseEst = gEstatutos.Children[intLinea.LineNo + i] as InterfazLinea;
+
+                        if (elseEst.Type != LineType.None)
+                        {
+                            moveEverythingDown(elseEst.LineNo);
+                        }
+
+                        elseEst.Type = LineType.Else;
+                        elseEst.IsText = true;
+                        elseEst.Text = "else {";
+
+
+                        for (i = 1; i <= 3; i++)
+                        {
+                            InterfazLinea line = gEstatutos.Children[elseEst.LineNo + i] as InterfazLinea;
+
+                            if (line.Type != LineType.None)
+                            {
+                                moveEverythingDown(line.LineNo);
+                            }
+
+                            if (i < 3) line.IndentLevel++;
+                        }
+
+                        i--;
+                        InterfazLinea corchCi2 = gEstatutos.Children[elseEst.LineNo + i] as InterfazLinea;
+                        corchCi2.LinkedTo = elseEst.LineNo;
+                        corchCi2.Type = LineType.Other;
+                        corchCi2.IsText = true;
+                        corchCi2.Text = "}";
+                        elseEst.LinkedTo = corchCi2.LineNo;
+                    }
+
+
+
+                    break;
+
+                case LineType.While:
+                case LineType.For:
+                case LineType.Function:
+                case LineType.Else:
+                    int j;
+                    for (j = 1; j <= 4; j++)
+                    {
+                        InterfazLinea line = gEstatutos.Children[intLinea.LineNo + j] as InterfazLinea;
+
+                        if (line.Type != LineType.None)
+                        {
+                            moveEverythingDown(line.LineNo);
+                        }
+
+                        if (j < 4) line.IndentLevel++;
+
+                    }
+
+                    j--;
+                    InterfazLinea corchCi3 = gEstatutos.Children[intLinea.LineNo + j] as InterfazLinea;
+                    corchCi3.LinkedTo = intLinea.LineNo;
+                    corchCi3.Type = LineType.Other;
+                    corchCi3.IsText = true;
+                    corchCi3.Text = "}";
+                    intLinea.LinkedTo = corchCi3.LineNo;
+                    break;
+
+
+                case LineType.Main:
+                    for (i = intLinea.LineNo + 1; i < intLinea.LinkedTo; i++)
+                    {
+                        InterfazLinea line = gEstatutos.Children[i] as InterfazLinea;
+                        line.IndentLevel++;
+                    }
+
+                    break;
+            }
+        }
 
         private void IntLinea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -329,6 +621,63 @@ namespace PLearning
             }
         }
 
+        private void FuncTypeSelectionChanged (object sender, EventArgs e)
+        {
+            InterfazLinea iLinea = sender as InterfazLinea;
+            ComboBox cb = iLinea.funcType;
+
+            if ((string)cb.SelectedItem == "void")
+            {
+                for (int i = iLinea.LineNo + 1; i < iLinea.LinkedTo; i++)
+                {
+                    if (i < gEstatutos.Children.Count)
+                    {
+                        InterfazLinea line = gEstatutos.Children[i] as InterfazLinea;
+
+                        if (line.Type == LineType.Return) line.Type = LineType.None;
+                    }
+
+                }
+            }
+            else
+            {
+
+                bool hasReturn = false;
+
+                
+                for (int i = iLinea.LineNo + 1; i < iLinea.LinkedTo; i++)
+                {
+                    if (i < gEstatutos.Children.Count)
+                    {
+                        InterfazLinea line = gEstatutos.Children[i] as InterfazLinea;
+
+                        if (line.Type == LineType.Return) hasReturn = true;
+                    }
+
+                }
+
+                if (!hasReturn)
+                {
+                    int link = iLinea.LinkedTo;
+
+                    if (iLinea.LinkedTo - 1 < gEstatutos.Children.Count)
+                    {
+                        if (((InterfazLinea)gEstatutos.Children[iLinea.LinkedTo - 1]).Type != LineType.None)
+                        {
+                            moveEverythingDown(iLinea.LinkedTo);
+                            ((InterfazLinea)gEstatutos.Children[link]).Type = LineType.Return;
+                        }
+                        else
+                        {
+                            ((InterfazLinea)gEstatutos.Children[iLinea.LinkedTo - 1]).Type = LineType.Return;
+                        }
+                    }
+                }
+
+                
+            }
+
+        }
        
 
         private void imTrashcan_Drop(object sender, DragEventArgs e)
@@ -338,60 +687,8 @@ namespace PLearning
                 InterfazLinea intLinea = e.Data.GetData("IntLinea") as InterfazLinea;
                 if (intLinea.Type != LineType.Main && intLinea.Type != LineType.Program && intLinea.Type != LineType.Other)
                 {
-
-                    if (intLinea.Type == LineType.While || intLinea.Type == LineType.For || intLinea.Type == LineType.If)
-                    {
-                        for (int i = intLinea.LineNo + 1; i <= intLinea.LinkedTo; i++)
-                        {
-                            InterfazLinea intLineaAux = ((InterfazLinea)gEstatutos.Children[i]);
-                            
-
-                            if (i == intLinea.LinkedTo)
-                            {
-                                intLineaAux.Type = LineType.None;
-                                intLineaAux.Text = "";
-                                intLineaAux.LinkedTo = -1;
-                            }
-                            else
-                            {
-                                intLineaAux.IndentLevel--;
-                            }
-
-                        }
-
-                        intLinea.LinkedTo = -1;
-
-                    }
-                    else if (intLinea.Type == LineType.Function)
-                    {
-                        for (int i = intLinea.LineNo + 1; i <= intLinea.LinkedTo; i++)
-                        {
-                            InterfazLinea intLineaAux = ((InterfazLinea)gEstatutos.Children[i]);
-                            
-                            intLineaAux.Type = LineType.None;
-
-                            if (i == intLinea.LinkedTo)
-                            {
-                                intLineaAux.Text = "";
-                                intLineaAux.LinkedTo = -1;
-                            }
-                            else
-                            {
-                                intLineaAux.IndentLevel = intLinea.IndentLevel;
-                            }
-
-                        }
-                    }
-                        
-
-                    intLinea.Type = LineType.None;
-                    intLinea.IsText = false;
-                    intLinea.Text = "";
-
-
+                    removeLine(intLinea.LineNo);
                 }
-
-
 
                 imTrashcan.Source = new BitmapImage(new Uri(@"pack://application:,,,/Images/trashcan.png"));
 
@@ -425,8 +722,203 @@ namespace PLearning
             }
         }
 
-       
+        private string convertToString ()
+        {
+            string s = "";
+            foreach (InterfazLinea intLinea in gEstatutos.Children)
+            {
+                if (intLinea.Type != LineType.None && intLinea.Type != LineType.Add)
+                {
+                    if (!intLinea.IsText)
+                    {
+                        intLinea.convertToText();
+                    }
 
-        
+                    s += intLinea.Text + "\n";
+                }
+                else
+                {
+                    s += "\n";
+                }
+
+            }
+
+            return s;
+        }
+
+        public Stream GenerateStreamFromString(string s)
+        {
+            MemoryStream stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
+
+        private void button_Click(object sender, RoutedEventArgs e)
+        {
+            Compile();
+        }
+
+        private List<string> getInput()
+        {
+            List<string> inputString = new List<string>();
+            int lineCount = input.LineCount;
+
+            for (int i = 0; i < lineCount; i++)
+            {
+                string line = input.GetLineText(i);
+                var lineInput = Regex.Matches(line, @"[\""].+?[\""]|[^ ]+")
+                .Cast<Match>()
+                .Select(m => m.Value)
+                .ToList();
+
+                foreach (string st in lineInput)
+                {
+                    inputString.Add(Regex.Replace(st, @"\t|\n|\r", ""));
+
+                }
+            }
+
+            inputString.RemoveAll(string.IsNullOrEmpty);
+            return inputString;
+        }
+
+        private void Compile()
+        {
+            string pString;
+
+            pString = convertToString();
+
+            using (Stream s = GenerateStreamFromString(pString))
+            {
+                if (lineWithError != -1) ((InterfazLinea)gEstatutos.Children[lineWithError]).ErrorText = "";
+
+                output.Text = "";
+
+                Scanner scanner = new Scanner(s);
+                Parser parser = new Parser(scanner);
+                Programa p = null;
+
+                List<string> inputString = getInput();
+
+                try
+                {
+                    p = parser.Parse();
+                    output.Text = "Sin errores de compilación. \n--\n";
+                    VirtualMachine vm = new VirtualMachine(p, output, inputString);
+                    vm.Run();
+                    lineWithError = -1;
+                }
+                catch (FatalError ex)
+                {
+                    string[] msg = ex.Message.Split('*');
+                    int lineErr = int.Parse(msg[0]);
+                    ((InterfazLinea)gEstatutos.Children[lineErr - 1]).ErrorText = msg[1];
+                    lineWithError = lineErr - 1;
+                   
+                }
+
+
+                VirtualStructure.Reset();   
+              
+            }
+        }
+
+        private void Save (string fileDir)
+        {
+            using (StreamWriter write = new StreamWriter(fileDir))
+            {
+                for (int i = 0; i < gEstatutos.Children.Count - 1; i++)
+                {
+                    InterfazLinea toWrite = gEstatutos.Children[i] as InterfazLinea;
+                    write.WriteLine(toWrite.ToString());
+                }
+            }
+
+        }
+
+        private void Open (string fileDir)
+        {
+
+
+            for (int i = 0; i < gEstatutos.Children.Count - 1; i++)
+            {
+                InterfazLinea toDelete = gEstatutos.Children[i] as InterfazLinea;
+                toDelete.Type = LineType.None;
+            }
+
+            string line;
+            using (StreamReader read = new StreamReader(fileDir))
+            {
+                int i = 0;
+                while ((line = read.ReadLine()) != null)
+                {
+
+                    if (i == gEstatutos.Children.Count - 1) addLines(1);
+
+                    InterfazLinea toWrite = gEstatutos.Children[i] as InterfazLinea;
+                    toWrite.fromString(line);
+                    i++;
+
+                    
+
+                }
+            }
+        }
+
+        private void pIcon_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            Compile();
+        }
+
+        private void svIcon_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog();
+
+            InterfazLinea pIntLinea = gEstatutos.Children[0] as InterfazLinea;
+            string name = pIntLinea.tbProgram.Text;
+
+            dlg.FileName = name; // Default file name
+            dlg.DefaultExt = ".ple"; // Default file extension
+            dlg.Filter = "PLearning Files (.ple)|*.ple"; // Filter files by extension
+
+            // Show save file dialog box
+            bool? result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dlg.FileName;
+                Save(filename);
+
+                MessageBox.Show("Archivo guardado.");
+                
+            }
+        }
+
+        private void opIcon_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            // Set filter for file extension and default file extension 
+            dlg.DefaultExt = ".ple";
+            dlg.Filter = "PLearning Files (.ple)|*.ple";
+
+
+            // Display OpenFileDialog by calling ShowDialog method 
+            bool? result = dlg.ShowDialog();
+
+
+            // Get the selected file name and display in a TextBox 
+            if (result == true)
+            {  
+                // Open document 
+                string filename = dlg.FileName;
+                Open(filename);
+            }
+        }
     }
 }

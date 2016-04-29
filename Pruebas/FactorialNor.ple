@@ -1,0 +1,28 @@
+Program^1^-1^program FactorialNor ;^FactorialNor^
+Function^1^8^function int factorial ( int num ) {^1^factorial^int num^
+Vars^2^-1^int i ;^0^?^?^?^?^i^?^?^?^?^
+Vars^2^-1^int acum = 1  ;^0^?^?^?^?^acum^1^
+For^2^6^for ( i = 2 ; i <= num ; i + 1 ) {^i = 2^i <= num^i + 1^
+Assign^3^-1^acum = acum * i ;^acum^acum * i^
+Other^2^4^}^
+Return^2^-1^return acum ; ^^
+Other^1^1^}^
+None^1^-1^
+Main^1^16^void main() {^
+Vars^2^-1^int x ;^0^?^?^?^?^x^?^?^?^?^
+Read^2^-1^x = read() ;^x^
+Write^2^-1^print ( factorial(x) ) ;^factorial(x)^
+None^2^-1^
+None^2^-1^
+Other^1^10^}^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^

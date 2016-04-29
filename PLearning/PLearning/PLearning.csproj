@@ -37,6 +37,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xaml" />
@@ -53,6 +54,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Enumerations\OperationCode.cs" />
+    <Compile Include="Model\Parameter.cs" />
+    <Compile Include="ParserScanner\Parser.cs" />
+    <Compile Include="ParserScanner\Scanner.cs" />
+    <Compile Include="Structures\Memory.cs" />
+    <Compile Include="Structures\SemanticCube.cs" />
+    <Compile Include="Structures\VirtualStructure.cs" />
+    <Compile Include="VirtualMachine.cs" />
     <Page Include="InterfazLinea.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -65,6 +74,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Enumerations\DataType.cs" />
+    <Compile Include="Enumerations\ReturnType.cs" />
     <Compile Include="InterfazLinea.xaml.cs">
       <DependentUpon>InterfazLinea.xaml</DependentUpon>
     </Compile>
@@ -75,6 +86,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\Constant.cs" />
+    <Compile Include="Model\Dimension.cs" />
+    <Compile Include="Model\MemoryDir.cs" />
+    <Compile Include="Model\Procedure.cs" />
+    <Compile Include="Model\Programa.cs" />
+    <Compile Include="Model\Quadruple.cs" />
+    <Compile Include="Model\Variable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -126,6 +144,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\trashcan-open.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\saveIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\openIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\openIconv2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\openIconv3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\playIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

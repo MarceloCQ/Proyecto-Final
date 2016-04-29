@@ -1,0 +1,35 @@
+Program^1^-1^program Fibonacci ;^Fibonacci^
+Function^1^10^function int fibonacci ( int num ) {^1^fibonacci^int num^
+Vars^2^-1^int res ;^0^?^?^?^?^res^?^?^?^?^
+If^2^5^if ( num < 3 ) {^num < 3^
+Assign^3^-1^res = 1 ;^res^1^
+Other^2^3^}^
+Else^2^8^else {^
+Assign^3^-1^res = fibonacci(num - 1) + fibonacci(num - 2) ;^res^fibonacci(num - 1) + fibonacci(num - 2)^
+Other^2^6^}^
+Return^2^-1^return res ; ^res^
+Other^1^1^}^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+Main^1^18^void main() {^
+Vars^2^-1^int x ;^0^?^?^?^?^x^?^?^?^?^
+Read^2^-1^x = read() ;^x^
+Write^2^-1^print ( fibonacci(x) ) ;^fibonacci(x)^
+Other^1^14^}^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^

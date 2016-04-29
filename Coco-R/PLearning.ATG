@@ -20,6 +20,7 @@ COMPILER PLearning
 	Stack<int> PSaltos = new Stack<int>();					//Pila de saltos para guardar los Jumps o la referencia a un Goto/GotoF
 	Stack<string> PilaVarDim = new Stack<string>();			//Pila que guarda el nombre de las variables dimensionadas que se agregaron en la pila de operandos
 
+
 	List<Quadruple> quadruples = new List<Quadruple>();		//Lista de los cuádruplos del programa
 
 
@@ -46,7 +47,7 @@ COMPILER PLearning
 		int tipo1 = PTipos.Pop();				//Se saca el tipo del operando del lado izquierdo de la pila de tipos
 
 
-
+		//Si en cualquier lado de la pila de tipos hay un -1 significa que se uso la variable dimensionada sin indexar, se mearca error
 		if (operand1 == -1 || operand2 == -1)
 		{
 			SemErr("Error - No se indexo la variable dimensionada.");
@@ -96,24 +97,30 @@ COMPILER PLearning
 				//Se mete la dirección en la pila de operandos y el tipo en la pila de tipos.
 				Variable v = procedureTable[programID].VariableTable[t.val];
 
+				//Si la variable es dimensionada
 				if (v.Dimensions.Count > 0)
 				{
+					//Se mete un -1 a la pila de operandos para saber que es dimensionada
 					PilaOperandos.Push(-1);
+					//Se mete el nombre a la pila de variables dimensionadas para poder accesarla
 					PilaVarDim.Push(v.Name);
 
 				}
 				else
 				{
+					//Si es normal, se mete solamente a la pila de operandos
 					PilaOperandos.Push(v.VirtualDir);
 				}
 				
+				//Se mete el tipo de variable a pila de tipos
 				PTipos.Push(v.Type);
 
+				//Se regresa la variable
 				return v;
 			}
 			
 		}
-		//Si la variable si se encuentra en la tabla de variables del procedimiento actual
+		//Si la variable si se encuentra en la tabla de variables del procedimiento actual, se hace lo mismo
 		else
 		{
 			//Se mete la dirección en la pila de operandos y el tipo en la pila de tipos.
@@ -168,42 +175,64 @@ COMPILER PLearning
 		PTipos.Push(dataType);
 	}
 
-	private void tryToInsertArgument(int k, string id)
+	private int tryToInsertArgument(int k, string id, bool refer)
 	{
 		//Se saca el argumento junto con su tipo
 		int argument = PilaOperandos.Pop();
 		int argumentType = PTipos.Pop();
 
-		//Si el tipo de argumento no el mismo con el definido, se marca error.
+		//Si el numero de procedimiento es menor a la cantidad de procedimientos
 		if (k < procedureTable[id].Parameters.Count)
 		{
+			//Se revisa que el tipo coincida
 			if (argumentType != procedureTable[id].Parameters[k].Type)
 			{
 				SemErr("Error - Los tipos no coinciden con la función");
-				finishExecution();
 			}
 
+			//Si el parametro usado en la llamada es por referencia y en la declaración no lo es, o viceversa, se marca error
+			if (refer != procedureTable[id].Parameters[k].Reference)
+			{
+				if (refer)
+				{
+					SemErr("Error, el parámetro que se declaró en la función no es por referencia.");
+				}
+				else
+				{
+					SemErr("Error, el parámetro que se declaró en la función es por referencia.");
+				}
+
+			}
+
+
 			Variable v = null;
+
+			//Si el argumento es igual a -1, quiere decir que es una variable dimensionada
 			if (argument == -1)
 			{
+				//Se obtiene la variable con la pila de variables dimensionadas
 				v = actualProcedure.VariableTable[PilaVarDim.Pop()];
 
+				//Se revisa que el numero de dimensiones del parametro coincida con lo declarado
 				if (procedureTable[id].Parameters[k].Dimensions.Count != v.Dimensions.Count)
 				{
 					SemErr("Error - El numero de dimensiones en el parametro no coincide con lo declarado");
-					finishExecution();
 				}
+
 
 				int i = 0;
 				int tam = 1;
+
+				//Se recorren todas las dimensiones de la declaración junto con las dimensionadas de la variable que se usó en la llamada
 				foreach (Dimension d in procedureTable[id].Parameters[k].Dimensions)
 				{
+					//Si no coincide la dimension con lo declarado, se marca error
 					if (d.Dim != v.Dimensions[i].Dim)
 					{
 						SemErr("Error - El tamaño de la matriz dimensionada tiene que ser igual al declarado.");
-						finishExecution();
 					}
 
+					//Se obtiene el tamaño al multiplicar las dimensiones
 					tam *= d.Dim;
 					i++;
 				}
@@ -219,14 +248,16 @@ COMPILER PLearning
 				//Se añade un nuevo cuadruplo "Param" con el numero de procedimiento
 				insertQuadruple(OperationCode.Param, argument, -1, procedureTable[id].Parameters[k].VirtualDir);
 			}
-
-				
 			
 		}
 		else
 		{
 			SemErr("El numero de parametros no coindice con la declaración de la función");
 		}
+
+		//Se regresa el argumento
+		return argument;
+
 	}
 
 	///<summary>
@@ -234,6 +265,7 @@ COMPILER PLearning
 	///</summary>
 	private int findProcedure(string name)
 	{
+		//Se recorren todos los procedimientos de la lista de procedimientos, y si el nombre coincide, se regresa el índice
 		for (int i = 0; i < procedureList.Count; i++)
 		{
 			if (procedureList[i] == name)
@@ -242,39 +274,52 @@ COMPILER PLearning
 			}			
 		}
 
+		//Si no coincide se regresa -1
 		return -1;
 	}
+
+	///<summary>
+	/// Método que sirve para procesar cada dimension, es decir cuadruplificar la fórmula de indexamiento
+	///</summary>
 
 	private void processDimension(int dim, Dimension d, Variable vDim)
 	{
 
+		//Si en el tope de la pila de tipos no hay un entero se marca error porque el indice solo puede ser de tipo entero.
 		if (PTipos.Peek() != DataType.Int)
 		{
 			SemErr("Error - El indexamiento para arreglos necesita ser de tipo entero.");
-			finishExecution();
 		}
 
+		//Se inserta el cuádruplo para verificar que el indice caiga dentro de los rangos de la dimension correspondiente
 		insertQuadruple(OperationCode.Verify, PilaOperandos.Peek(), -1, d.Dim);
 
+		//Si aún hay otra dimension
 		if (dim + 1 < vDim.Dimensions.Count)
 		{
+			//Se saca de la pila de operandos la s
 			int s = PilaOperandos.Pop();
+			//Se saca de la pila de tipos el tipo de la s
 			int sTipo = PTipos.Pop();
 
+			//Si en la pila de operandos hay un -1, quiere decir que la variable dimensionada no se indexo y se marca error
 			if (s == -1)
 			{
 				SemErr("Error - No se indexo la variable dimensionada.");
-				finishExecution();
 			}
 
+			//Se obtiene un temporal de la estructura y se incrementa el contador
 			int vTemp = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
 
+			//Inserta la constante M a la lista de constantes para poder usar su dirección
 			tryToInsertConstant(DataType.Int, d.M.ToString());
 
+			//Se obtiene esa dirección
 			int virtualDir = PilaOperandos.Pop();
 			PTipos.Pop();
 
+			//Se multiplica sn * mn para la fórmula de indexamiento
 			insertQuadruple(OperationCode.Multiplication, s, virtualDir, vTemp);
 			PilaOperandos.Push(vTemp);
 			PTipos.Push(DataType.Int);
@@ -282,19 +327,25 @@ COMPILER PLearning
 			
 		}
 
+		//Si no es la primera dimensión
 		if (dim > 0)
 		{
+
+			//Se sacan ambos lados de la suma y sus tipos
 			int aux2 = PilaOperandos.Pop();
 			int aux1 = PilaOperandos.Pop();
 
 			int tAux2 = PTipos.Pop();
 			int tAux1 = PTipos.Pop();
 
+			//Se obtiene un temporal
 			int vTemp2 = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
 
+			//Se realiza la suma de mn-1 * sn-1 + mn * sn
 			insertQuadruple(OperationCode.Sum, aux1, aux2, vTemp2);
 
+			//Se mete el resultado a la pila de operandos
 			PilaOperandos.Push(vTemp2);
 			PTipos.Push(DataType.Int);
 
@@ -302,7 +353,7 @@ COMPILER PLearning
 	}
 
 	///<summary>
-	/// Método que sirve para finalizar la ejecución del programa.
+	/// Método que sirve para finalizar la ejecución del programa. Usado en testing solamente
 	///</summary>
 	private void finishExecution()
 	{
@@ -346,7 +397,7 @@ TOKENS
 	FOR = "for".
 	RETURN = "return".
 	PRINT = "print".
-	READLINE = "readLine".
+	READLINE = "read".
 	FUNCTION = "function".
 	TRUE = "true".
 	FALSE = "false".
@@ -387,7 +438,7 @@ PLearning = PROGRAM
 	.)
  ID
  	(. 
- 		actualProcedure = new Procedure(t.val, ReturnType.Program);		//Se asgian como procedimiento actual al procedimiento global
+ 		actualProcedure = new Procedure(t.val, ReturnType.Program);		//Se asigna como procedimiento actual al procedimiento global
  		procedureTable.Add(t.val, actualProcedure);   					//Se añade este procedimiento a la tabla de procedimientos
  		procedureList.Add(t.val);										//Se añade también a la lista de procedimientos
  		programID = t.val;												//Se asigna el id del programa para uso posterior
@@ -400,7 +451,7 @@ PYC {vars}
 	.)
  {funcion} main
 	(.
-		insertQuadruple(OperationCode.EndProg, -1, -1, -1);
+		insertQuadruple(OperationCode.EndProg, -1, -1, -1);				//Se añade el ENDPROG al final del programa
 	.)
  .
 
@@ -628,7 +679,17 @@ PYC ] LLAVECI
 .
 
 /*---------------------------------------------- PARAMETRO ---------------------------------------------- */
-parametro = [REF] tipo
+parametro =
+(.
+	bool refer = false;
+.)
+[REF
+
+(.
+	refer = true;
+.)
+
+] tipo
 	(.
 		//Se saca el tipo de parametro y se añade a la lista de parametros de la función
 		int type = DataType.toDataType(t.val);
@@ -647,7 +708,7 @@ parametro = [REF] tipo
 			//Si no, entonces se añade se la tabla de variables y se incrementa el contador de tamaño
 			int virtDir = VirtualStructure.getNext(scopeActual, type);
 			actualProcedure.VariableTable.Add(t.val, new Variable(t.val, type, virtDir));
-			actualProcedure.Parameters.Add(new Parameter(type, virtDir));
+			actualProcedure.Parameters.Add(new Parameter(type, virtDir, refer));
 			actualProcedure.increaseCounter(VirtualStructure.VariableType.Local, type);
 		}
  	.)
@@ -655,6 +716,13 @@ parametro = [REF] tipo
 | 
 CORCHAB CTEENTERA
 	(.
+
+		if (refer)
+		{
+			SemErr("No se pueden mandar variables dimensionadas como parametros por referencia.");
+			finishExecution();
+		}
+
 		List<int> dimensions = new List<int>();
 		int dim = int.Parse(t.val);
 		dimensions.Add(dim);
@@ -684,11 +752,11 @@ CORCHAB CTEENTERA
 		//Si no, entonces se añade a la tabla de variables
 		else
 		{
-			Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
-			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r - 1);
-			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
+			Variable vDim = new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type));
+			VirtualStructure.reserveSpaces(scopeActual, type, r - 1);
+			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, type, r);
 
-			Parameter p = new Parameter(type, vDim.VirtualDir);
+			Parameter p = new Parameter(type, vDim.VirtualDir, false);
 			p.Dimensions = vDim.Dimensions;
 			actualProcedure.Parameters.Add(p);
 
@@ -973,18 +1041,7 @@ bloque]
 estatuto = (condicion | escritura | ciclos | asignacionollamada ). 
 
 /*---------------------------------------------- LECTURA ---------------------------------------------- */
-lectura = READLINE 
-	(.
-		//Se obtiene la siguiente dirección virtual para los temporales y se mete a la pila de operandos
-		int tempString = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.String);
-		PilaOperandos.Push(tempString);
-		//Se mete un cero la pila de tipos ya que la lectura puede ser de cualquier tipo
-		PTipos.Push(0);
-
-		//Se genera un nuevo cuádruplo con el Readline y el tempString
-		Quadruple qAux = new Quadruple(OperationCode.ReadLine, -1, -1, tempString);
-	.)
-PARAB PARCI.
+lectura = READLINE PARAB PARCI.
 
 /*---------------------------------------------- ESCRITURA ---------------------------------------------- */
 escritura = PRINT PARAB expresion
@@ -1037,7 +1094,7 @@ cuantificador] IGUAL
 		//Se mete el operador de igual a la pila de operadores
 		POper.Push(OperationCode.Assignment);
 	.)
- (expresion | lectura) 
+ (expresion 
 (.
 		//Se saca el lado derecho y el lado izquierdo de la asignación
  		int ladoDer = PilaOperandos.Pop();
@@ -1066,9 +1123,23 @@ cuantificador] IGUAL
  			SemErr("Error - Tipos no compatibles en asignación.");
  			finishExecution();
  		}	
-.)
+.) | lectura
+	(.
+
+		int ladoIzq = PilaOperandos.Pop();
+		int tipoIzq = PTipos.Pop();
+		POper.Pop();
+
+		//Si es lectura se genera un cuadruplo para guardar en la variable lo que se lea
+		insertQuadruple(OperationCode.Read, tipoIzq, -1, ladoIzq);
+
+
+	.)
+
+)
  | PARAB 
 	(.
+		List<int> refParams = new List<int>();
 		//Si el procedimiento no se encuentra en el diccionario de procedimientos
 		if (!procedureTable.ContainsKey(id))
 		{
@@ -1091,23 +1162,38 @@ cuantificador] IGUAL
 		}
 
 		int k = 0; 					//Se inicializa el apuntador a parametros
+		List<int> referenceList = new List<int>();
 
 
 	.)
- [expresion 
+ [ ( REF ID
 	(.
-		tryToInsertArgument(k, id);
+		Variable v = tryToInsertVariable();
+		tryToInsertArgument(k, id, true);
+		referenceList.Add(v.VirtualDir);
 	.)
- {COMA 
+ | expresion  
+	(.
+		tryToInsertArgument(k, id, false);
+	.)
+ ){COMA 
 	(.
 		k++;
 	.)
- expresion 
+ ( REF ID
+	(.
+		Variable v = tryToInsertVariable();
+		tryToInsertArgument(k, id, true);
+		referenceList.Add(v.VirtualDir);
+	.)
+|
+  expresion
+ 
  	(.
- 		tryToInsertArgument(k, id);
+ 		tryToInsertArgument(k, id, false);
 	.)
 
- }] PARCI
+ )}] PARCI
 	(.
 		if (k + 1 < procedureTable[id].Parameters.Count)
 		{
@@ -1115,6 +1201,19 @@ cuantificador] IGUAL
 		}
 
 		insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
+
+		int i = 0;
+		foreach (Parameter p in procedureTable[id].Parameters)
+		{
+			if (p.Reference)
+			{
+				insertQuadruple(OperationCode.Ref, p.VirtualDir, referenceList[i], -1);
+				i++;
+			}
+		}
+
+
+		insertQuadruple(OperationCode.EndFunc, -1, -1, -1);
 	.)
 
  ) PYC.
@@ -1322,7 +1421,7 @@ factor = PARAB
  		//Se saca el fondo falso
  		POper.Pop();
 	.)
-  | [MAS | MENOS] ctevar.
+  | ctevar.
 
 /*---------------------------------------------- CTEVAR ---------------------------------------------- */
 ctevar = (ctelet | ctebool | ctenum | ID
@@ -1357,27 +1456,57 @@ ctevar = (ctelet | ctebool | ctenum | ID
 		}
 
 		int k = 0; 					//Se inicializa el apuntador a parametros
+		List<int> referenceList = new List<int>();
+
 	.)
 
- [expresion
+
+ [ ( REF ID
 	(.
-		tryToInsertArgument(k, id);
+		Variable v = tryToInsertVariable();
+		tryToInsertArgument(k, id, true);
+		referenceList.Add(v.VirtualDir);
 	.)
- {COMA
+ | expresion
+	(.
+		tryToInsertArgument(k, id, false);
+	.)
+ ){COMA
 	(.
 		k++;
+		
 	.)
- expresion
+ ( REF ID
 	(.
-		tryToInsertArgument(k, id);
+		Variable v = tryToInsertVariable();
+		tryToInsertArgument(k, id, true);
+		referenceList.Add(v.VirtualDir);
 	.)
- }] PARCI
+ |
+  expresion
+	(.
+		tryToInsertArgument(k, id, false);
+	.)
+ )}] PARCI
  	(.
  		if (k + 1 < procedureTable[id].Parameters.Count)
 		{
 			SemErr("Error - El numero de parametros no coindice con la declaración de la función");
 		}
  		insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
+
+ 		int i = 0;
+		foreach (Parameter p in procedureTable[id].Parameters)
+		{
+			if (p.Reference)
+			{
+				insertQuadruple(OperationCode.Ref, p.VirtualDir, referenceList[i], -1);
+				i++;
+			}
+		}
+
+
+ 		insertQuadruple(OperationCode.EndFunc, -1, -1, -1);
 
  		Variable funcVariable = procedureTable[programID].VariableTable[id];
  		
@@ -1421,15 +1550,23 @@ ctebool = (TRUE | FALSE)
 .
 
 /*---------------------------------------------- CTENUM ---------------------------------------------- */
-ctenum = (CTEENTERA 
+ctenum =
+	(.
+		bool negativo = false;
+	.)
+[MAS | MENOS
+	(.
+		negativo = true;
+	.)
+] (CTEENTERA 
 	(.
 		//Se intenta insertar la constante entera al diccionario de constantes 
-		tryToInsertConstant(DataType.Int, t.val);
+		tryToInsertConstant(DataType.Int, (negativo? "-" : "") + t.val);
 	.)
 | CTEFLOAT
 	(.
 		//Se intenta insertar la constante flotante al diccionario de constantes 
-		tryToInsertConstant(DataType.Float, t.val);
+		tryToInsertConstant(DataType.Float, (negativo? "-" : "") + t.val);
 	.)
 ).
 

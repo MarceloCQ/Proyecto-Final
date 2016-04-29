@@ -4,18 +4,18 @@
         xmlns:local="clr-namespace:PLearning" x:Class="PLearning.MainWindow"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
         Title="MainWindow" Height="700" Width="1200" Loaded="Window_Loaded">
-   
+
     <Window.Resources>
         <System:Double x:Key="RenglonHeight">29</System:Double>
-        
+
         <Style x:Key="EventsInterfazLinea" TargetType="{x:Type UserControl}">
-            <EventSetter Event="DragEnter" Handler="onDragEnterIntLinea"/>
+            <EventSetter Event="DragOver" Handler="onDragEnterIntLinea"/>
             <EventSetter Event="DragLeave" Handler="onDragLeaveIntLinea"/>
             <EventSetter Event="Drop" Handler="onDropIntLinea"/>
             <EventSetter Event="MouseMove" Handler="IntLinea_MouseMove"/>
             <EventSetter Event="PreviewMouseLeftButtonDown" Handler="IntLinea_PreviewMouseLeftButtonDown"/>
         </Style>
-        
+
     </Window.Resources>
 
     <Grid x:Name="gPrincipal">
@@ -30,6 +30,11 @@
             </Grid.RowDefinitions>
             <Rectangle Fill="Black" Grid.RowSpan="2" HorizontalAlignment="Left" Width="3"/>
             <Rectangle Fill="Black" Grid.RowSpan="2" Height="3" VerticalAlignment="Center"/>
+            <Grid Grid.Row="1" Background="Black">
+                <TextBlock x:Name="output" HorizontalAlignment="Left" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="5" Foreground="White" FontSize="18"/>
+            </Grid>
+            <TextBox x:Name="input" Margin="5" TextWrapping="Wrap" Text="" AcceptsReturn="True"/>
+
         </Grid>
         <Grid x:Name="gIDE">
 
@@ -45,11 +50,11 @@
                 </Grid.ColumnDefinitions>
                 <Rectangle Fill="Red" HorizontalAlignment="Right" Width="1"/>
                 <Viewbox>
-                <TextBlock RenderTransformOrigin="0.5,0.5" TextWrapping="Wrap" Text="PLearning" VerticalAlignment="Bottom" FontFamily="Architext">
+                    <TextBlock RenderTransformOrigin="0.5,0.5" TextWrapping="Wrap" Text="PLearning" VerticalAlignment="Bottom" FontFamily="Architext">
                         <TextBlock.RenderTransform>
-                        <RotateTransform Angle="-25"/>
-                    </TextBlock.RenderTransform>
-                </TextBlock>
+                            <RotateTransform Angle="-25"/>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
                 </Viewbox>
                 <Grid Grid.Column="1">
                     <Grid.ColumnDefinitions>
@@ -62,7 +67,7 @@
                     <Image Grid.Column="1" Tag="{x:Static local:LineType.Function}" Margin="10" HorizontalAlignment="Center" Source="Images/funcion.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
                     <Image Grid.Column="2" Tag="{x:Static local:LineType.Call}" Margin="10" HorizontalAlignment="Center" Source="Images/llamada.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
                     <Image Grid.Column="3" Tag="{x:Static local:LineType.Assign}" Margin="10" HorizontalAlignment="Center" Source="Images/asignacion.png" PreviewMouseLeftButtonDown="Estatuto_PreviewMouseLeftButtonDown" MouseMove="Estatuto_MouseMove"/>
-                    
+
                 </Grid>
 
 
@@ -77,33 +82,40 @@
                 <ScrollViewer x:Name="svContent" Grid.ColumnSpan="2">
 
                     <StackPanel x:Name="gEstatutos">
-                    
 
-                        
-                        <local:InterfazLinea LineNo="0" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Program" IndentLevel="1"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="1" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="2" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="3" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="4" Style="{StaticResource EventsInterfazLinea}"  Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="5" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="6" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="None"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="7" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Main" IsText="True" Text="void main() {" IndentLevel="1"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="8" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="9" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="10" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="11" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="12" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="13" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="14" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="15" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="16" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="17" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" Type="Other" IsText="True" Text="}" IndentLevel="1"></local:InterfazLinea>
-                        <local:InterfazLinea LineNo="18" Style="{StaticResource EventsInterfazLinea}" Type="Add" Height="{StaticResource RenglonHeight}" AddClicked="AgregarPagina"></local:InterfazLinea>
+
+
+                        <local:InterfazLinea LineNo="0" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" Type="Program" IndentLevel="1"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="1" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="2" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="3" Style="{StaticResource EventsInterfazLinea}" Height="{StaticResource RenglonHeight}" SelectionChanged="FuncTypeSelectionChanged"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="4" Style="{StaticResource EventsInterfazLinea}"  Height="{StaticResource RenglonHeight}" SelectionChanged="FuncTypeSelectionChanged"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="5" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="6" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="7" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" Type="Main" IsText="True" Text="void main() {" IndentLevel="1" LinkedTo="17"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="8" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="9" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="10" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="11" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="12" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="13" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="14" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="15" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="16" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" IndentLevel="2"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="17" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Height="{StaticResource RenglonHeight}" Type="Other" IsText="True" Text="}" IndentLevel="1" LinkedTo="7"></local:InterfazLinea>
+                        <local:InterfazLinea LineNo="18" Style="{StaticResource EventsInterfazLinea}" SelectionChanged="FuncTypeSelectionChanged" Type="Add" Height="{StaticResource RenglonHeight}" AddClicked="AgregarPagina"></local:InterfazLinea>
+
 
                     </StackPanel>
 
                 </ScrollViewer>
-                <Image x:Name="imTrashcan" Grid.Column="1" Source="Images/trashcan.png"  Height="60" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,35,10" AllowDrop="True" Drop="imTrashcan_Drop" DragEnter="imTrashcan_DragEnter" DragLeave="imTrashcan_DragLeave"/>
+                <DockPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,25,10">
+
+                    <Image x:Name="imTrashcan" DockPanel.Dock="Right" Source="Images/trashcan.png"  Height="60" AllowDrop="True" Drop="imTrashcan_Drop" DragEnter="imTrashcan_DragEnter" DragLeave="imTrashcan_DragLeave"/>
+                    <Image x:Name="svIcon"  DockPanel.Dock="Right"  Source="Images/saveIcon.png"  Height="50" AllowDrop="True" Margin="0,0,10,0" Cursor="Hand" MouseUp="svIcon_MouseUp" ></Image>
+                    <Image x:Name="opIcon"  DockPanel.Dock="Right"  Source="Images/openIcon.png"  Height="40" AllowDrop="True" Margin="0,5,10,0" Cursor="Hand" MouseUp="opIcon_MouseUp" ></Image>
+                    <Image x:Name="pIcon" HorizontalAlignment="Right"    Source="Images/playIcon.png"  Height="50" AllowDrop="True" Margin="0,0,10,0" Cursor="Hand" MouseUp="pIcon_MouseUp" ></Image>
+                </DockPanel>
                 <Grid Grid.Column="0">
                     <Grid.RowDefinitions>
                         <RowDefinition/>

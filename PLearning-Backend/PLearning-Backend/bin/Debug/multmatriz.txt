@@ -1,6 +1,4 @@
 program Marcelo;
-bool[5,5] x;
-int[7] p;
 
 function void multmat(int[10,10] m1, int [10,10] m2, int m1f, int m1c, int m2f, int m2c)
 {

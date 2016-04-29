@@ -1,0 +1,66 @@
+Program^1^-1^program MultMatriz ;^MultMatriz^
+Function^1^20^function void multmat ( int[10, 10] m1, int[10, 10] m2, int m1f, int m1c, int m2f, int m2c  ) {^0^multmat^int[10, 10] m1, int[10, 10] m2, int m1f, int m1c, int m2f, int m2c ^
+Vars^2^-1^int [ 10, 10 ]  mr ;^0^10, 10^mr^?^?^?^?^
+Vars^2^-1^int i, j, k, sum ;^0^?^?^?^?^i, j, k, sum^?^?^?^?^
+If^2^6^if ( m1c != m2f ) {^m1c != m2f^
+Write^3^-1^print ( "El numero de columnas tiene que coincidir con el numero de filas" ) ;^"El numero de columnas tiene que coincidir con el numero de filas"^
+Other^2^4^}^
+Else^2^19^else {^
+For^3^18^for ( i = 0 ; i < m1f ; i + 1 ) {^i = 0^i < m1f^i + 1^
+For^4^16^for ( j = 0 ; j < m2c ; j + 1 ) {^j = 0^j < m2c^j + 1^
+Assign^5^-1^sum = 0 ;^sum^0^
+For^5^13^for ( k = 0 ; k < m1c ; k + 1 ) {^k = 0^k < m1c^k + 1^
+Assign^6^-1^sum = sum + m1[i, k] * m2[k, j] ;^sum^sum + m1[i, k] * m2[k, j]^
+Other^5^11^}^
+Assign^5^-1^mr[i, j] = sum ;^mr[i, j]^sum^
+Write^5^-1^print ( sum, " " ) ;^sum, " "^
+Other^4^9^}^
+Write^4^-1^print ( "\n" ) ;^"\n"^
+Other^3^8^}^
+Other^2^7^}^
+Other^1^1^}^
+Main^1^42^void main() {^
+Vars^2^-1^int [ 10, 10 ]  mat1, mat2 ;^0^10, 10^mat1, mat2^?^?^?^?^
+Vars^2^-1^int fil1, col1, fil2, col2, i, j ;^0^?^?^?^?^fil1, col1, fil2, col2, i, j^?^?^?^?^
+Read^2^-1^fil1 = read() ;^fil1^
+Read^2^-1^col1 = read() ;^col1^
+Read^2^-1^fil2 = read() ;^fil2^
+Read^2^55^col2 = read() ;^col2^
+For^2^52^for ( i = 0 ; i < fil1 ; i + 1 ) {^^^^
+For^3^31^for ( j = 0 ; j < col1 ; j + 1 ) {^^^^
+Assign^4^-1^mat1[i, j] = read() ;^^^
+Other^3^29^}^
+Other^2^49^}^
+None^2^50^
+For^2^38^for ( i = 0 ; i < fil2 ; i + 1 ) {^i = 0^i < fil2^i + 1^
+For^3^37^for ( j = 0 ; j < col2 ; j + 1 ) {^j = 0^j < col2^j + 1^
+Assign^4^-1^mat2[i, j] = read() ;^mat2[i, j]^read()^
+Other^3^35^}^
+Other^2^34^}^
+None^2^-1^
+Call^2^-1^multmat ( mat1, mat2, fil1, col1, fil2, col2 ) ;^multmat^mat1, mat2, fil1, col1, fil2, col2^
+None^2^-1^
+Other^1^21^}^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^35^
+None^1^-1^
+None^1^32^
+None^1^33^
+None^1^-1^
+None^1^28^
+None^1^-1^
+None^1^28^
+None^1^27^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^
+None^1^-1^

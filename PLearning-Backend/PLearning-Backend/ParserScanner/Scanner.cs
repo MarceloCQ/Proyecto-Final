@@ -329,7 +329,7 @@ public class Scanner {
 			case "for": t.kind = 19; break;
 			case "return": t.kind = 20; break;
 			case "print": t.kind = 21; break;
-			case "readLine": t.kind = 22; break;
+			case "read": t.kind = 22; break;
 			case "function": t.kind = 23; break;
 			case "true": t.kind = 24; break;
 			case "false": t.kind = 25; break;

@@ -21,55 +21,57 @@ namespace PLearning
     public partial class InterfazLinea : UserControl
     {
 
-        
 
-        private LineType type;
+
+        private LineType type = LineType.None;
         private bool isText;
         private string text;
+        private string errorText;
         private int indentLevel;
         public static int LastLineNo = 19;
         public FrameworkElement Actual { get; set; }
         public int LinkedTo { get; set; }
 
         public event EventHandler AddClicked;
-        
+        public event EventHandler SelectionChanged;
+
         [Description("Type of line"), Category("Data")]
         public LineType Type
         {
             get { return type; }
             set
             {
-                if (Actual != null)
+                if (type != value)
                 {
-                    Actual.Visibility = System.Windows.Visibility.Collapsed;
-                }
 
-                type = value;
-                if (type == LineType.None)
-                {
-                    if (Actual != null)
+                    if (type != LineType.None)
                     {
-                        Actual.Visibility = System.Windows.Visibility.Collapsed;
-                        Actual = null;
-                        isText = false;
+                        if (Actual != null) Actual.Visibility = Visibility.Collapsed;
                     }
-                }
-                else
-                {
-                    if (!isText)
+
+                    if (value == LineType.None)
                     {
-                        changeActual(type);
+                        resetFields();
+                    }
+
+                    type = value;
+
+                    changeActual(type);
+
+                    if (type != LineType.None)
+                    {
+
+                        if (Actual != null) Actual.Visibility = Visibility.Visible;
+
                     }
                     else
                     {
-                        Actual = tbText;
-                    }
-
-                    if (Actual != null)
-                    {
-                        Actual.Visibility = System.Windows.Visibility.Visible;
+                        IsText = false;
+                        Actual = null;
                     }
                 }
+
+
             }
         }
 
@@ -82,7 +84,20 @@ namespace PLearning
                 text = value;
                 tbText.Text = text;
 
-                
+
+            }
+        }
+
+        [Description("Text of element"), Category("Data")]
+        public string ErrorText
+        {
+            get { return errorText; }
+            set
+            {
+                errorText = value;
+                errText.Text = errorText;
+
+
             }
         }
 
@@ -92,31 +107,28 @@ namespace PLearning
             get { return isText; }
             set
             {
-                isText = value;
+                if (isText != value)
+                {
+                    isText = value;
 
-                if (Actual != null)
-                {
-                    Actual.Visibility = System.Windows.Visibility.Collapsed;
-                }
-               
+                    if (isText)
+                    {
 
-                if (isText)
-                {
-                    
-                    Actual = tbText;
-                    
-                }
-                else
-                {
-                    changeActual(type);
+                        if (Actual != null) Actual.Visibility = Visibility.Collapsed;
+
+                        tbText.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+
+                        if (Actual != null && Type != LineType.None) Actual.Visibility = Visibility.Visible;
+
+                        tbText.Visibility = Visibility.Collapsed;
+                        tbText.Text = "";
+                    }
                 }
 
-                if (Actual != null)
-                {
-                    Actual.Visibility = System.Windows.Visibility.Visible;
-                }
-                
-               
+
             }
         }
 
@@ -133,9 +145,9 @@ namespace PLearning
 
         [Description("Line number"), Category("Data")]
         public int LineNo { get; set; }
-        
 
-        private void changeActual (LineType type)
+
+        private void changeActual(LineType type)
         {
             switch (type)
             {
@@ -172,33 +184,98 @@ namespace PLearning
                 case LineType.Program:
                     Actual = spEstProgram;
                     break;
+                case LineType.Return:
+                    Actual = spEstReturn;
+                    break;
 
             }
         }
-    
+
 
         public InterfazLinea()
         {
             InitializeComponent();
-            Type = LineType.None;
-            IndentLevel = 2;
+            IndentLevel = 1;
             LinkedTo = -1;
 
         }
 
-        private void imAdd_MouseUp(object sender, MouseButtonEventArgs e)
+        public InterfazLinea Copy()
         {
-            if (this.AddClicked != null)
-                this.AddClicked(new object(), new EventArgs());
+            InterfazLinea newIntLinea = new InterfazLinea();
+            newIntLinea.Type = Type;
+            newIntLinea.IsText = IsText;
+            newIntLinea.Text = Text;
+            newIntLinea.IndentLevel = IndentLevel;
+            newIntLinea.LinkedTo = LinkedTo;
+            newIntLinea.LineNo = LineNo;
+
+            return newIntLinea;
+               
         }
 
-        private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        private void resetFields()
         {
-            if (e.Key == Key.Enter)
+
+            
+
+            if (Actual != null && type != LineType.Add)
             {
-                StackPanel parent = (StackPanel)((FrameworkElement)sender).Parent;
-                string texto = "";
-                foreach (UIElement child in parent.Children)
+                StackPanel sp = Actual as StackPanel;
+
+                foreach (UIElement child in sp.Children)
+                {
+                    if (child is TextBox)
+                    {
+                        ((TextBox)child).Text = "";
+                    }
+                    else if (child is ComboBox)
+                    {
+                        ((ComboBox)child).SelectedIndex = -1;
+                    }
+                }
+
+                if (type == LineType.Vars)
+                {
+                    tbCorch1.Visibility = Visibility.Visible;
+                    tbCorch2.Visibility = Visibility.Visible;
+                    tblCuant.Visibility = Visibility.Visible;
+                    imSupCuant.Visibility = Visibility.Visible;
+                    tblIgual.Visibility = Visibility.Visible;
+                    tbAsign.Visibility = Visibility.Visible;
+                    tbEspacio.Visibility = Visibility.Visible;
+                    imSupIgual.Visibility = Visibility.Visible;
+                }
+
+            }
+
+            ErrorText = "";
+            LinkedTo = -1;
+        }
+
+        private void imAdd_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            AddClicked?.Invoke(this, new EventArgs());
+        }
+
+        public void convertToText()
+        {
+            if (!isText)
+            {
+                string texto = getText();
+
+                IsText = true;
+                Text = texto;
+            }
+        }
+
+        private string getText ()
+        {
+            string texto = "";
+            StackPanel parent = Actual as StackPanel;
+            foreach (UIElement child in parent.Children)
+            {
+                if (child.Visibility == Visibility.Visible)
                 {
                     if (child is TextBox)
                     {
@@ -212,13 +289,18 @@ namespace PLearning
                     {
                         texto += ((ComboBox)child).SelectedValue;
                     }
-
                 }
 
-                IsText = true;
-                Text = texto;
+            }
 
+            return texto;
+        }
 
+        private void TextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                convertToText();
             }
         }
 
@@ -230,7 +312,7 @@ namespace PLearning
         {
             if (e.ClickCount == 2)
             {
-                if (type != LineType.Other || type != LineType.None)
+                if (type != LineType.Other && type != LineType.None && type != LineType.Main)
                 {
                     IsText = false;
                 }
@@ -238,24 +320,125 @@ namespace PLearning
         }
 
         private void imSupCuant_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            StackPanel parent = ((FrameworkElement)sender).Parent as StackPanel;
-            parent.Children.Remove(tbCorch1);
-            parent.Children.Remove(tbCorch2);
-            parent.Children.Remove(tblCuant);
-            parent.Children.Remove(imSupCuant);
+        {        
+            tbCorch1.Visibility = Visibility.Collapsed;
+            tbCorch2.Visibility = Visibility.Collapsed;
+            tblCuant.Visibility = Visibility.Collapsed;
+            imSupCuant.Visibility = Visibility.Collapsed;
         }
 
         private void imSupIgual_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            StackPanel parent = ((FrameworkElement)sender).Parent as StackPanel;
-            parent.Children.Remove(tblIgual);
-            parent.Children.Remove(tbAsign);
-            parent.Children.Remove(tbEspacio);
-            parent.Children.Remove(imSupIgual);
+        {         
+            tblIgual.Visibility = Visibility.Collapsed;
+            tbAsign.Visibility = Visibility.Collapsed;
+            tbEspacio.Visibility = Visibility.Collapsed;
+            imSupIgual.Visibility = Visibility.Collapsed;
         }
 
+        private void funcType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            SelectionChanged?.Invoke(this, new EventArgs());
+        }
 
+        override public string ToString()
+        {
+            string s = "";
+
+
+
+            s += LineTypeExtensions.ToString(Type) + "^" + IndentLevel + "^" + LinkedTo + "^";
+
+            if (Type != LineType.None && Type != LineType.Add)
+            {
+                if (!isText)
+                {
+                    s += getText() + "^";
+                }
+                else
+                {
+                    s += Text + "^";
+                }
+
+                if (Actual != null)
+                {
+                    StackPanel parent = Actual as StackPanel;
+                    foreach (UIElement child in parent.Children)
+                    {
+                        if (child.Visibility == Visibility.Visible)
+                        {
+                            if (child is TextBox)
+                            {
+                                s += ((TextBox)child).Text + "^";
+                            }
+                            else if (child is ComboBox)
+                            {
+                                s += ((ComboBox)child).SelectedIndex + "^";
+                            }
+                        }
+                        else
+                        {
+                            s += "?^";
+                        }
+
+                    }
+                }
+
+            }
+
+
+            return s;
+        }
+
+        public void fromString (string s)
+        {
+            int parte = 0;
+            string[] partes = s.Split(new char[] { '^' });
+
+            Type = LineTypeExtensions.ToType(partes[parte]);
+            parte++;
+
+            IndentLevel = int.Parse(partes[parte]);
+            parte++;
+
+            LinkedTo = int.Parse(partes[parte]);
+            parte++;
+
+            if (Type != LineType.None)
+            {
+                IsText = true;
+                Text = partes[parte];
+                parte++;
+
+                if (Actual != null)
+                {
+                    StackPanel parent = Actual as StackPanel;
+                    foreach (UIElement child in parent.Children)
+                    {
+                        if (partes[parte] != "?")
+                        {
+                            if (child is TextBox)
+                            {
+                                ((TextBox)child).Text = partes[parte];
+                                parte++;
+                            }
+                            else if (child is ComboBox)
+                            {
+                                ((ComboBox)child).SelectedIndex = int.Parse(partes[parte]);
+                                parte++;
+                            }
+                        }
+                        else
+                        {
+                            child.Visibility = Visibility.Collapsed;
+                            parte++;
+                        }
+
+                    }
+                }
+            }
+
+            
+        }
 
     }
 }

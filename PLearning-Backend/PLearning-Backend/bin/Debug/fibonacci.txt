@@ -1,4 +1,4 @@
-program Marcelo;
+program fibo;
 function int fibonacci(int num)
 {
 	int res;
@@ -17,6 +17,6 @@ function int fibonacci(int num)
 
 void main()
 {
-	print(fibonacci(18));
+	print(fibonacci(10));
 	print("\n");
 }

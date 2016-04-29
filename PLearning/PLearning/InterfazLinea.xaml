@@ -50,7 +50,7 @@
 
                 <StackPanel x:Name="spEstProgram" Visibility="Collapsed" Orientation="Horizontal">
                     <TextBlock Text="program " Style="{StaticResource tBlocks}"></TextBlock>
-                    <TextBox Style="{StaticResource tBoxes}" MinWidth="60" KeyUp="TextBox_KeyUp"></TextBox>
+                    <TextBox x:Name="tbProgram" Style="{StaticResource tBoxes}" MinWidth="60"></TextBox>
                     <TextBlock Text=" ;" Style="{StaticResource tBlocks}"></TextBlock>
                 </StackPanel>
 
@@ -79,7 +79,7 @@
                 </StackPanel>
                 <StackPanel x:Name="spEstFuncion" Visibility="Collapsed" Orientation="Horizontal">
                     <TextBlock Text="function " Style="{StaticResource tBlocks}"/>
-                    <ComboBox MinWidth="40" Style="{StaticResource cBoxes}">
+                    <ComboBox x:Name="funcType" MinWidth="40" Style="{StaticResource cBoxes}" SelectionChanged="funcType_SelectionChanged">
                         <System:String>void</System:String>
                         <System:String>int</System:String>
                         <System:String>float</System:String>
@@ -105,11 +105,11 @@
                 <StackPanel x:Name="spEstRead" Visibility="Collapsed" Orientation="Horizontal">
                     <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock Text=" =" Style="{StaticResource tBlocks}"/>
-                    <TextBlock Text=" Read() ;" Style="{StaticResource tBlocks}"/>               
+                    <TextBlock Text=" read() ;" Style="{StaticResource tBlocks}"/>               
                 </StackPanel>
                 
                 <StackPanel x:Name="spEstWrite" Visibility="Collapsed" Orientation="Horizontal">
-                    <TextBlock Text="Write ( " Style="{StaticResource tBlocks}"/>
+                    <TextBlock Text="print ( " Style="{StaticResource tBlocks}"/>
                     <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock Text=" ) ;" Style="{StaticResource tBlocks}"/>
                 </StackPanel>
@@ -120,6 +120,7 @@
                     <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock Text=" ) ;" Style="{StaticResource tBlocks}"/>
                 </StackPanel>
+                
                 <StackPanel x:Name="spEstVars" Visibility="Collapsed" Orientation="Horizontal">
                     <ComboBox MinWidth="40" Style="{StaticResource cBoxes}">
                         <System:String>int</System:String>
@@ -128,12 +129,12 @@
                         <System:String>string</System:String>
                         <System:String>bool</System:String>
                     </ComboBox>
-                    <TextBlock Text=" " Style="{StaticResource tBlocks}"/>
-                    <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock x:Name="tbCorch1" Text=" [ " Style="{StaticResource tBlocks}"/>
                     <TextBox x:Name="tblCuant" Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock x:Name="tbCorch2" Text=" ] " Style="{StaticResource tBlocks}"/>
                     <Image x:Name="imSupCuant" Margin="0, 5,0,10" Source="Images/menos.png" Cursor="Hand" MouseUp="imSupCuant_MouseUp"/>
+                    <TextBlock Text=" " Style="{StaticResource tBlocks}"/>
+                    <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock x:Name="tblIgual"  Text=" = " Style="{StaticResource tBlocks}"/>
                     <TextBox x:Name="tbAsign" Style="{StaticResource tBoxes}" MinWidth="45"/>
                     <TextBlock x:Name="tbEspacio"  Text=" " Style="{StaticResource tBlocks}"/>
@@ -141,10 +142,19 @@
                     <TextBlock Text=" ;" Style="{StaticResource tBlocks}"/>
                 </StackPanel>
 
+                <StackPanel x:Name="spEstReturn" Visibility="Collapsed" Orientation="Horizontal">
+                    <TextBlock Text="return " Style="{StaticResource tBlocks}"/>
+                    <TextBox Style="{StaticResource tBoxes}" MinWidth="45"/>
+                    <TextBlock Text=" ; " Style="{StaticResource tBlocks}"/>
+                </StackPanel>
+
                 <TextBlock Margin="0,0,0,0" x:Name="tbText" Visibility="Collapsed" Text="" FontFamily="Architext" FontSize="24" VerticalAlignment="Bottom" MouseUp="tbText_MouseUp" MouseLeftButtonDown="tbText_MouseLeftButtonDown"></TextBlock>
             </Grid>
-            <Grid x:Name="gError">
-                <TextBlock Foreground="Red" FontFamily="Architext" FontSize="24" Text=""/>
+            <Grid x:Name="gError" Margin="20,0,0,-5">
+                <Border BorderBrush="{x:Null}">
+                   <TextBlock x:Name="errText" Foreground="Red" FontFamily="Architext" FontSize="20" Text="" VerticalAlignment="Bottom"/>
+                </Border>
+                
             </Grid>
         </StackPanel>
     </Grid>
