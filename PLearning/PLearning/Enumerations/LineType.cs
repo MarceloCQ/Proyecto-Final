@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace PLearning
+﻿namespace PLearning
 {
+    /// <summary>
+    /// Enumeración que tiene los tipos de lineas que tiene la interface
+    /// </summary>
     public enum LineType
     {
         Main,
@@ -25,8 +23,16 @@ namespace PLearning
         None
     }
 
+    /// <summary>
+    /// Clase que se encarga de manejar los metodos para los tipos de linea
+    /// </summary>
     public static class LineTypeExtensions
     {
+        /// <summary>
+        /// Método que se encarga de convertir un LineType a string
+        /// </summary>
+        /// <param name="ltype">El LineType a convertir</param>
+        /// <returns></returns>
         public static string ToString (this LineType ltype)
         {
             switch (ltype)
@@ -52,7 +58,11 @@ namespace PLearning
             }
         }
 
-
+        /// <summary>
+        /// Método que se encarga de convertir un string a LineType
+        /// </summary>
+        /// <param name="sType">El string a convertir</param>
+        /// <returns>El LineType que representa el string</returns>
         public static LineType ToType(string sType)
         {
             switch (sType)

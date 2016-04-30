@@ -1,0 +1,18 @@
+Program^1^-1^program Operaciones ;^Operaciones^
+Function^1^5^function void unaria ( int numero, ref int cuadrado, ref int aumento, ref int decremento ) {^0^unaria^int numero, ref int cuadrado, ref int aumento, ref int decremento^
+Assign^2^-1^cuadrado = numero * numero ;^cuadrado^numero * numero^
+Assign^2^-1^aumento = numero + 1 ;^aumento^numero + 1^
+Assign^2^-1^decremento = numero - 1 ;^decremento^numero - 1^
+Other^1^1^}^
+Main^1^17^void main() {^
+Vars^2^-1^int cuad, aum, decr, num ;^0^?^?^?^?^cuad, aum, decr, num^?^?^?^?^
+Read^2^-1^num = read() ;^num^
+Call^2^-1^unaria ( num, ref cuad, ref aum, ref decr ) ;^unaria^num, ref cuad, ref aum, ref decr^
+None^2^-1^
+Write^2^-1^print ( num, " ", cuad, " ", aum, " ", decr ) ;^num, " ", cuad, " ", aum, " ", decr^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+None^2^-1^
+Other^1^6^}^

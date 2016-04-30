@@ -28,7 +28,10 @@ namespace PLearning_Backend.Structures
 
         public int ReturnDir { get; set; }
 
-
+        /// <summary>
+        /// Método constructor de la clase memoria
+        /// </summary>
+        /// <param name="size">Tamaño a separar de la función</param>
         public Memory(int[,] size)
         {
             //Se asigna el espacio de memoria dependiendo del tamaño que tenga la función
@@ -46,12 +49,17 @@ namespace PLearning_Backend.Structures
             TemporalChars = new char[size[VirtualStructure.VariableType.Temporal, DataType.Char]];
         }
 
-
+        /// <summary>
+        /// Método que sirve para leer un valor de la memoria
+        /// </summary>
+        /// <param name="memDir">Contiene el tipo de dato, el tipo de variable y la dirección real</param>
+        /// <returns>El valor accesado</returns>
         public dynamic ReadValue(MemoryDir memDir)
         {
-
+            //Se revisa para ver si el tipo de variable es global o local
             if (memDir.VariableType == VirtualStructure.VariableType.Global || memDir.VariableType == VirtualStructure.VariableType.Local)
             {
+                //Si si es, entonces se accesa a los arreglos de Variable dependiendo del tipo
                 switch (memDir.DataType)
                 {
                     case DataType.Int:
@@ -67,6 +75,7 @@ namespace PLearning_Backend.Structures
 
                 }
             }
+            //Si es temporal, entonces se accesa a los arreglos de temporales dependiendo del tipo
             else if (memDir.VariableType == VirtualStructure.VariableType.Temporal)
             {
 
@@ -96,11 +105,17 @@ namespace PLearning_Backend.Structures
             
         }
 
+        /// <summary>
+        /// Método que sirve para escribir un valor a la memoria
+        /// </summary>
+        /// <param name="memDir">Contiene el tipo de dato, el tipo de variable y la dirección real</param>
+        /// <param name="value">Valor a escribir en la memoria</param>
         public void WriteValue(MemoryDir memDir, dynamic value)
         {
-
+            //Se revisa para ver si el tipo de variable es global o local
             if (memDir.VariableType == VirtualStructure.VariableType.Global || memDir.VariableType == VirtualStructure.VariableType.Local)
             {
+                //Si si es, entonces se escribe en los arreglos de variable, dependiendo del tipo
                 switch (memDir.DataType)
                 {
                     case DataType.Int:
@@ -121,9 +136,10 @@ namespace PLearning_Backend.Structures
 
                 }
             }
+            //Si es temporal
             else if (memDir.VariableType == VirtualStructure.VariableType.Temporal)
             {
-
+                //Se escribe en los arreglos de temporal, dependiendo del tipo
                 switch (memDir.DataType)
                 {
                     case DataType.Int:
@@ -144,12 +160,6 @@ namespace PLearning_Backend.Structures
 
                 }
             }
-            else
-            {
-                
-            }
-
-            
          }
 
 

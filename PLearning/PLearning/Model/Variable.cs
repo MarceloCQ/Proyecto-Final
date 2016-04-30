@@ -11,10 +11,10 @@ namespace PLearning_Backend.Model
     /// </summary>
     public class Variable
     {
-        public string Name { get; set; }
-        public int Type { get; set; }
-        public int VirtualDir { get; set; }
-        public List<Dimension> Dimensions { get; set;}
+        public string Name { get; set; }                //Nombre de la variable
+        public int Type { get; set; }                   //Tipo de la variable
+        public int VirtualDir { get; set; }             //Dirección virtual
+        public List<Dimension> Dimensions { get; set;}  //Lista de dimensiones en caso que las tenga
         
 
 

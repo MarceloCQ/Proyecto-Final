@@ -11,32 +11,32 @@ namespace PLearning_Backend.Enumerations
     /// </summary>
     public static class OperationCode
     {
-        public const int And = 0;
-        public const int Or = 1;
-        public const int MoreThan = 2;
-        public const int LessThan = 3;
-        public const int Different = 4;
-        public const int EqualComparison = 5;
-        public const int Sum = 6;
-        public const int Substraction = 7;
-        public const int Multiplication = 8;
-        public const int Division = 9;
-        public const int MoreThanEq = 10;
-        public const int LessThanEq = 11;
-        public const int Assignment = 12;
-        public const int Goto = 13;
-        public const int GotoF = 14;
-        public const int Print = 15;
-        public const int Read = 16;
-        public const int Era = 17;
-        public const int Param = 18;
-        public const int Ret = 19;
-        public const int Return = 20;
-        public const int GoSub = 21;
-        public const int EndProg = 22;
-        public const int Verify = 23;
-        public const int EndFunc = 24;
-        public const int Ref = 25;
+        public const int And = 0;               //Operación lógica and
+        public const int Or = 1;                //Operación lógica or
+        public const int MoreThan = 2;          //Operación de comparación mayor que
+        public const int LessThan = 3;          //Operación de comparación menor que
+        public const int Different = 4;         //Operacion de comparación diferente
+        public const int EqualComparison = 5;   //Operacion de comparación igual
+        public const int Sum = 6;               //Operación aritmética suma
+        public const int Substraction = 7;      //Operación aritmética resta
+        public const int Multiplication = 8;    //Operación aritmética multiplicación
+        public const int Division = 9;          //Operación aritmética división
+        public const int MoreThanEq = 10;       //Operación comparación mayor o igual a que
+        public const int LessThanEq = 11;       //Operación de comparación menor o igual a que
+        public const int Assignment = 12;       //Operación aritmética de asignación
+        public const int Goto = 13;             //Mueve el program counter a la posición que se da
+        public const int GotoF = 14;            //Si la condición que se da es falsa, mueve el program counter 
+        public const int Print = 15;            //Sirve para imprimir en pantalla
+        public const int Read = 16;             //Sirve para leer del input
+        public const int Era = 17;              //Sirve para crear el registro de activación de la función
+        public const int Param = 18;            //Sirve para asignar el valor de la llamada al valor de la variable de la función
+        public const int Ret = 19;              //Sirve para regresar el Porgram Counter a donde se habia quedado antes de la llamada
+        public const int Return = 20;           //No utilizado
+        public const int GoSub = 21;            //Sirve para desactivar la memoria actual 
+        public const int EndProg = 22;          //Indica que ya se acabo el programa
+        public const int Verify = 23;           //Verifica que el índice esté dentro del rango
+        public const int EndFunc = 24;          //Indica que ya se acabo la función y no vienen mas parametros por referencia que resolver
+        public const int Ref = 25;              //Asigna de la memoria de la función a la ultima memoría dormida los parámetros por referencia
 
 
         /// <summary>

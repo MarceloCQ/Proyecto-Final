@@ -38,11 +38,17 @@ namespace PLearning_Backend.Structures
         //Matriz que almacena todas las direcciones de la memoria virtual
         private static int[,] matrixStructure = new int[4, 6];
 
+        /// <summary>
+        /// Método constructor de la clase estática virtual structure que copia lo de la matriz inicial a la matriz usada
+        /// </summary>
         static VirtualStructure()
         {
             matrixStructure = (int[,])initialMatrixStructure.Clone();
         }
 
+        /// <summary>
+        /// Método que sirve para resetear la matriz utilizada con todos los valores iniciales, por si se quiere volver a correr el programa
+        /// </summary>
         public static void Reset()
         {
             matrixStructure = (int[,])initialMatrixStructure.Clone();
@@ -59,23 +65,38 @@ namespace PLearning_Backend.Structures
             return matrixStructure[variableType, dataType]++;
         }
 
+        /// <summary>
+        /// Metodo que sirve para reservar n espacios de la estructura virtual
+        /// </summary>
+        /// <param name="variableType">Es el tipo de variable (Temporal, constante, local o global)</param>
+        /// <param name="dataType">Tipo de dato</param>
+        /// <param name="spaces">Cantidad a reservar</param>
         public static void reserveSpaces(int variableType, int dataType, int spaces)
         {
             matrixStructure[variableType, dataType] += spaces;
         }
 
+        /// <summary>
+        /// Método que sirve para, a raiz de una dirección virtual, obtener el tipo de variable y el tipo de dato
+        /// </summary>
+        /// <param name="virtualDir">Dirección virtual a obtener</param>
+        /// <returns>Tipo de variable y tipo de dato en una tupla</returns>
         public static Tuple<int, int> getVTypeAndDType(int virtualDir)
         {
+            //Se recorre la matriz inicial
             for (int i = 0; i < 4; i++)
             {
                 for (int j = 1; j < 6; j++)
                 {
+                    //Si la dirección virtual cae antes del siguiente valor
                     if (virtualDir < initialMatrixStructure[i , j])
                     {
+                        //Si no es el primero, entonces se regresa el anterior
                         if (j > 1)
                         {
                             return Tuple.Create(i, j - 1);
                         }
+                        //Si es el primero, se regresa el ultimo de la fila anterior
                         else
                         {
                             return Tuple.Create(i - 1, 5);
@@ -85,6 +106,7 @@ namespace PLearning_Backend.Structures
                 }
             }
 
+            //Si es mayor que el último valor de la mtriz, se regresa que es constante char
             if (virtualDir > initialMatrixStructure[3, 5])
             {
                 return Tuple.Create(3, 5);
@@ -93,6 +115,9 @@ namespace PLearning_Backend.Structures
             return null;
         }
 
+        /// <summary>
+        /// Método que sirve para reiniciar los constador locales y temporales ya que son locales a una función
+        /// </summary>
         public static void resetCounters()
         {
             matrixStructure[VariableType.Local, DataType.Int] = initialMatrixStructure[VariableType.Local, DataType.Int];
@@ -108,12 +133,19 @@ namespace PLearning_Backend.Structures
             matrixStructure[VariableType.Temporal, DataType.Char] = initialMatrixStructure[VariableType.Temporal, DataType.Char];
         }
 
+        /// <summary>
+        /// Método que sirve para, a raiz de una dirección virtual obtener la dirección real, el tipo de variable y el tipo de dato
+        /// </summary>
+        /// <param name="virtualDir">Dirección virtual a obtener</param>
+        /// <returns>La dirección real, el tipo de variable y el tipo de dato</returns>
         public static MemoryDir getRealIndex(int virtualDir)
         {
+            //Se obtiene el tipo de variable y el tipo de dato con la función previa
             Tuple<int, int> VTypeAndDType = getVTypeAndDType(virtualDir);
-
             int vType = VTypeAndDType.Item1;
             int dataType = VTypeAndDType.Item2;
+
+            //Se obtiene la dirección real restando la virtual menos la inicial para ese tipo de variable y de dato
             int realDir = virtualDir - initialMatrixStructure[vType, dataType];
 
             return new MemoryDir(vType, dataType, realDir);

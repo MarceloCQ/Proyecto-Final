@@ -633,34 +633,30 @@ PARAB [parametro {COMA parametro }] PARCI LLAVEAB
 		int returnType = PTipos.Pop();
 		int ret = PilaOperandos.Pop();
 
+		//Si lo que se sacó es un -1, significa que la variable dimensionada no se indexó
 		if (ret == -1)
 		{
-			SemErr("Error - No se indexo la variable dimensionada.");
-			finishExecution();
+			SemErr("Error - No se indexó la variable dimensionada.");
 		}
 
 		//Si el tipo de la expresión no coincide con el tipo de retorno se marca error
 		if (returnType != retType)
 		{
 			SemErr("Error - Tipos incompatibles en return");
-			finishExecution();
 		}
 		else
 		{
+			//Se prende la bandera de retorno para al final revisar si coincide con lo que se declaró
 			hasReturn = true;
 
 			
 			//Si si coincide se genera un nuevo cuádruplo
 			insertQuadruple(OperationCode.Assignment, ret, -1, virtualDir);
 		}
-
-		
-
-		
-
 	.)
 PYC ] LLAVECI 
 	(.
+		//Al acabar la función se pone un cuadruplo de ret para regresar donde se quedó
 		insertQuadruple(OperationCode.Ret, -1, -1, -1);
 
 
@@ -668,7 +664,6 @@ PYC ] LLAVECI
 		if (retType != ReturnType.Void && !hasReturn)
 		{
 			SemErr("Error - Una función que no es void tiene que tener return.");
-			finishExecution();
 		}
 
 		//Se resetean los contadores para que sean locales a cada función
@@ -681,6 +676,7 @@ PYC ] LLAVECI
 /*---------------------------------------------- PARAMETRO ---------------------------------------------- */
 parametro =
 (.
+	//Variable que indica si el parámetro es por referencia o no
 	bool refer = false;
 .)
 [REF
@@ -717,12 +713,13 @@ parametro =
 CORCHAB CTEENTERA
 	(.
 
+		//Si es por referencia, y se encuentra con dimensiones, entonces se marca error.
 		if (refer)
 		{
 			SemErr("No se pueden mandar variables dimensionadas como parametros por referencia.");
-			finishExecution();
 		}
 
+		//Se crea una nueva lista de dimensiones y se añade la primera dimensión que se encontró
 		List<int> dimensions = new List<int>();
 		int dim = int.Parse(t.val);
 		dimensions.Add(dim);
@@ -730,12 +727,14 @@ CORCHAB CTEENTERA
 	.)
 [ COMA CTEENTERA 
 	(.
+		//Se añada la siguiente dimension a la lista y se va acumulando en la r para el tamaño
 		dim = int.Parse(t.val);
 		dimensions.Add(dim);
 		r *= dim;
 	.)
 [ COMA CTEENTERA
 	(.
+		//Se añade la última dimensión y se acumula en la r
 		dim = int.Parse(t.val);
 		dimensions.Add(dim);
 		r *= dim;
@@ -756,16 +755,19 @@ CORCHAB CTEENTERA
 			VirtualStructure.reserveSpaces(scopeActual, type, r - 1);
 			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, type, r);
 
+			//También se añade el parametro a la tabla de parametros 
 			Parameter p = new Parameter(type, vDim.VirtualDir, false);
 			p.Dimensions = vDim.Dimensions;
 			actualProcedure.Parameters.Add(p);
 
+			//Se recorren todas las dimensiones para sacar las Ms y guardarlas
 			foreach(int dimension in dimensions)
 			{
 				r = r / dimension;
 				vDim.Dimensions.Add(new Dimension(dimension, r));
 			}
 
+			//Se añade la variable a la tabla de variables del procedimiento
 			actualProcedure.VariableTable.Add(t.val, vDim);
 
 		}
@@ -801,6 +803,7 @@ PARAB PARCI LLAVEAB
 	.)
 {vars} {estatuto} LLAVECI
 	(.
+		//Cuando se acaba el main, se resetean los contados para que sean locales a la función
 		VirtualStructure.resetCounters();
 	.)
 .
@@ -1049,12 +1052,14 @@ escritura = PRINT PARAB expresion
 		//Se saca el resultado de evaluar la expresión y con eso se genera un cuádruplo para imprimirlo
 		int resExp = PilaOperandos.Pop();
 
+		//Si el tope de la pila es un -1 quiere decir que era una variable dimensionada sin indexar
 		if (resExp == -1)
 		{
 			SemErr("Error - No se indexo la variable dimensionada.");
 			finishExecution();
 		}
 
+		//Se genera el cuádruplo del print
 		insertQuadruple(OperationCode.Print, -1, -1, resExp);
 	.)
 
@@ -1085,6 +1090,7 @@ asignacionollamada = ID
 	.)
 [
 	(.
+		//Como es una variable dimensionada, se saca el tope de ambas pilas
 		PilaOperandos.Pop();
 		PTipos.Pop();
 	.)
@@ -1103,7 +1109,6 @@ cuantificador] IGUAL
  		if (ladoDer == -1 || ladoIzq == -1)
  		{
 			SemErr("Error - No se indexo la variable dimensionada.");
-			finishExecution();
  		}
 
  		//Se saca el tipo del lado derecho y el tipo de lado izquierdo de la asignación
@@ -1126,6 +1131,7 @@ cuantificador] IGUAL
 .) | lectura
 	(.
 
+		//Si es lectura, entonces se saca los dos lados de la pila
 		int ladoIzq = PilaOperandos.Pop();
 		int tipoIzq = PTipos.Pop();
 		POper.Pop();
@@ -1149,9 +1155,10 @@ cuantificador] IGUAL
 		}
 		else
 		{
+			//Si la función que se intentó llamar se declaró como algo diferente a void entonces hay error
 			if (procedureTable[id].Type != 0)
 			{
-				SemErr("Error - La llamada a la función tiene que ser void");
+				SemErr("Error - La llamada a la función tiene que ser a una función void");
 			}
 			else
 			{
@@ -1161,6 +1168,7 @@ cuantificador] IGUAL
 			
 		}
 
+
 		int k = 0; 					//Se inicializa el apuntador a parametros
 		List<int> referenceList = new List<int>();
 
@@ -1168,16 +1176,21 @@ cuantificador] IGUAL
 	.)
  [ ( REF ID
 	(.
+		//Si es un parametro por referencia, entonces se mete la variable a la pila de operando
 		Variable v = tryToInsertVariable();
+		//Se mete también a los argumentos
 		tryToInsertArgument(k, id, true);
+		//Se mete a la lista de parametros por referencia
 		referenceList.Add(v.VirtualDir);
 	.)
  | expresion  
 	(.
+		//Si solo es una expresion, entonces solamente se revisa el argumento
 		tryToInsertArgument(k, id, false);
 	.)
  ){COMA 
 	(.
+		//Se mueve el apuntador de parametros
 		k++;
 	.)
  ( REF ID
@@ -1195,13 +1208,16 @@ cuantificador] IGUAL
 
  )}] PARCI
 	(.
+		//Se marca error si no coincide el número de parámetros con lo que se declaró
 		if (k + 1 < procedureTable[id].Parameters.Count)
 		{
 			SemErr("Error - El numero de parametros no coindice con la declaración de la función");
 		}
 
+		//Se inserta el cuádruplo de ir a la función
 		insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
 
+		//Se recorren todos los parametros por referencia para agregar los cuadruplos ref correspondientes correspondientes
 		int i = 0;
 		foreach (Parameter p in procedureTable[id].Parameters)
 		{
@@ -1212,7 +1228,7 @@ cuantificador] IGUAL
 			}
 		}
 
-
+		//Se genera un nuevo cuadruplo que indica que se terminó la función
 		insertQuadruple(OperationCode.EndFunc, -1, -1, -1);
 	.)
 
@@ -1221,22 +1237,26 @@ cuantificador] IGUAL
 /*---------------------------------------------- CUANTIFICADOR ---------------------------------------------- */
 cuantificador = 
 (.
+	//Se saca el id de la variable a accesar
 	string id = t.val;
 	int dim = 0;
 	Dimension d = null;
 
+	//Se mete la variable a la pila de operadores para revisar que exista
 	Variable vDim = tryToInsertVariable();
 	
+	//Se saca la direccion base y el tipo de las pilas
 	int dirBase = PilaOperandos.Pop();
 	int tipo = PTipos.Pop();
 
+	//Si la variable declarada no tiene dimensiones, se marca error.
 	if (vDim.Dimensions.Count == 0)
 	{
 		SemErr("Error - La variable que se intenta accesar no es dimensionada");
-		finishExecution();
 	}
 	else
 	{
+		//Si si tiene dimensiones entonces se inicializa el apuntador de dimension en 0 y se mete a la pila de operadores un fondo falso
 		dim = 0;
 		d = vDim.Dimensions[dim];
 		POper.Push(-1);
@@ -1245,24 +1265,27 @@ cuantificador =
 .)
 CORCHAB expresion
 	(.
+		//Se procesa la dimensión 
 		processDimension(dim, d, vDim);
 	.)
 [COMA
 	(.
 		
-
+		//Apunta a la siguiente dimensión
 		dim++;
 
+		//Si no coincide el número de dimensiones con lo declarado, entonces se marca error.
 		if (dim + 1 > vDim.Dimensions.Count)
 		{
 			SemErr("Error - El número de dimensiones no coincide con lo declarado.");
-			finishExecution();
 		}
 
+		//Se obtiene la siguiente dimensión
 		d = vDim.Dimensions[dim];
 	.) 
 expresion
 	(.
+		//Se procesa la siguiente dimensión
 		processDimension(dim, d, vDim);
 	.)
 [COMA 
@@ -1272,7 +1295,6 @@ expresion
 		if (dim + 1 > vDim.Dimensions.Count)
 		{
 			SemErr("Error - El número de dimensiones no coincide con lo declarado.");
-			finishExecution();
 		}
 
 		d = vDim.Dimensions[dim];
@@ -1283,29 +1305,31 @@ expresion
 	.)
 ] ] CORCHCI
 	(.
-
+		//Al final se vuelve a revisar que coincida el número de dimensiones con lo declarado
 		if (dim + 1 != vDim.Dimensions.Count)
 		{
 			SemErr("Error - El número de dimensiones no coincide con lo declarado.");
-			finishExecution();
 		}
 
+		//Se saca de la pila de operandos lo utlimo que se calculo para ya solo sumarle la direccion base
 		int aux1 = PilaOperandos.Pop();
 		int tAux1 = PTipos.Pop();
 
-
+		//Se obtiene un nuevo temporal
 		int vTemp3 = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, DataType.Int);
 		actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, DataType.Int);
 
-
+		//Se mete la dirección base a la tabla de constantes
 		tryToInsertConstant(DataType.Int, vDim.VirtualDir.ToString());
 
 		int vDir = PilaOperandos.Pop();
 		PTipos.Pop();
 
+		//Se hace la suma de lo calculado con la dirección base
 		insertQuadruple(OperationCode.Sum, aux1, vDir, vTemp3);
 		PTipos.Push(vDim.Type);
 
+		//Se mete a la pila de operandos la dirección donde se encuentra la dirección (por eso se ingresa negativo) de lo que se quiere accesar 
 		PilaOperandos.Push(-vTemp3);
 
 		POper.Pop();
@@ -1463,21 +1487,25 @@ ctevar = (ctelet | ctebool | ctenum | ID
 
  [ ( REF ID
 	(.
+		//Si lo que se quiere llamar es un parametro por referencia, se mete el id, el argumento y a la lista de parametros por referencia
 		Variable v = tryToInsertVariable();
 		tryToInsertArgument(k, id, true);
 		referenceList.Add(v.VirtualDir);
 	.)
  | expresion
 	(.
+		//Si solo es una expresion entonces solo se proces el argumento
 		tryToInsertArgument(k, id, false);
 	.)
  ){COMA
 	(.
+		//Se apunta al siguiente parametro
 		k++;
 		
 	.)
  ( REF ID
 	(.
+		//Si lo que se quiere llamar es un parametro por referencia, se mete el id, el argumento y a la lista de parametros por referencia
 		Variable v = tryToInsertVariable();
 		tryToInsertArgument(k, id, true);
 		referenceList.Add(v.VirtualDir);
@@ -1485,16 +1513,21 @@ ctevar = (ctelet | ctebool | ctenum | ID
  |
   expresion
 	(.
+		//Si solo es una expresion entonces solo se proces el argumento
 		tryToInsertArgument(k, id, false);
 	.)
  )}] PARCI
  	(.
+ 		//Se revisa que el número de parametros coincida con lo declarado.
  		if (k + 1 < procedureTable[id].Parameters.Count)
 		{
 			SemErr("Error - El numero de parametros no coindice con la declaración de la función");
 		}
+
+		//Se inserta el cuádruplo de GoSub para regresar en donde se habia quedado
  		insertQuadruple(OperationCode.GoSub, findProcedure(id), -1, procedureTable[id].InitialDir);
 
+ 		//Se recorren todos los parametros por referencia para insertar el cuadruplo ref
  		int i = 0;
 		foreach (Parameter p in procedureTable[id].Parameters)
 		{
@@ -1505,14 +1538,17 @@ ctevar = (ctelet | ctebool | ctenum | ID
 			}
 		}
 
-
+		//Se genera el cuadruplo para indicar que se acabo la función y no hay mas parametros por referencia
  		insertQuadruple(OperationCode.EndFunc, -1, -1, -1);
 
+ 		//Se saca la variable global que corresponde a la función
  		Variable funcVariable = procedureTable[programID].VariableTable[id];
  		
+ 		//Se genera un nuevo temporal
  		int temporal = VirtualStructure.getNext(VirtualStructure.VariableType.Temporal, funcVariable.Type);
  		actualProcedure.increaseCounter(VirtualStructure.VariableType.Temporal, funcVariable.Type);
 
+ 		//Se asigna el valor de la variable de la función al nuevo temporal y se mete a la pila de operandos.
  		PilaOperandos.Push(temporal);
  		PTipos.Push(funcVariable.Type);
  		insertQuadruple(OperationCode.Assignment, funcVariable.VirtualDir, -1, temporal);

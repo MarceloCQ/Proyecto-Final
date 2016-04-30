@@ -79,7 +79,7 @@
     <Compile Include="InterfazLinea.xaml.cs">
       <DependentUpon>InterfazLinea.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LineType.cs" />
+    <Compile Include="Enumerations\LineType.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

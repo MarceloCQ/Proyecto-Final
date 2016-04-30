@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace PLearning_Backend.Model
+﻿namespace PLearning_Backend.Model
 {
     /// <summary>
     /// Clase constante la cual incluye un nombre y una direccion virtual

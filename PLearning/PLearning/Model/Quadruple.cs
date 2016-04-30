@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace PLearning_Backend.Model
+﻿namespace PLearning_Backend.Model
 {
     /// <summary>
     /// Clase cuádruplo que inlute el codigo de operación, los dos operandos y el temporal o salto, dependiendo del código de operación

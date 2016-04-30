@@ -7,11 +7,11 @@ namespace PLearning_Backend.Model
     /// </summary>
     public class Procedure
     {
-        public string Name { get; set; }                            //Nombre del procedimiento
-        public int Type { get; set; }                               //Tipo de retorno o void del procedimiento
-        public int InitialDir { get; set; }                         //Direccion de inicio del procedimiento
-        public int[,] Size { get; set;}                             //Cantidad de variables que tiene el procedimiento
-        public List<Parameter> Parameters { get; set; }               //Lista parametros de procedimiento        
+        public string Name { get; set; }                                    //Nombre del procedimiento
+        public int Type { get; set; }                                       //Tipo de retorno o void del procedimiento
+        public int InitialDir { get; set; }                                 //Dirección de inicio del procedimiento
+        public int[,] Size { get; set;}                                     //Cantidad de variables que tiene el procedimiento
+        public List<Parameter> Parameters { get; set; }                     //Lista parámetros de procedimiento        
         public Dictionary<string, Variable> VariableTable { get; set; }     //Tabla de variables 
 
         /// <summary>
@@ -38,6 +38,12 @@ namespace PLearning_Backend.Model
             Size[variableType, dataType]++;
         }
 
+        /// <summary>
+        /// Incrementa el contador de tamaño por cierta cantidad para un cierto tipo de variable y tipo de dato (asignar espacio a variables dimensionadas)
+        /// </summary>
+        /// <param name="variableType">Tipo de variable, puede ser temporal o variable</param>
+        /// <param name="dataType">Tipo de dato del 0 al 5</param>
+        /// <param name="x">Cantidad a incrementar</param>
         public void increaseCounterByX (int variableType, int dataType, int x)
         {
             Size[variableType, dataType]+= x;
