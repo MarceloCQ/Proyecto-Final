@@ -777,7 +777,6 @@ namespace PLearning
                 foreach (string st in lineInput)
                 {
                     inputString.Add(Regex.Replace(st, @"\t|\n|\r", ""));
-
                 }
             }
 

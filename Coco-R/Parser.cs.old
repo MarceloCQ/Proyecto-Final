@@ -895,9 +895,9 @@ Dictionary<string, Procedure> procedureTable;			//Diccionario de procedimientos,
 			//Si no, entonces se aÃ±ade a la tabla de variables
 			else
 			{
-			Variable vDim = new Variable(t.val, tipoActual, VirtualStructure.getNext(scopeActual, tipoActual));
-			VirtualStructure.reserveSpaces(scopeActual, tipoActual, r - 1);
-			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, tipoActual, r);
+			Variable vDim = new Variable(t.val, type, VirtualStructure.getNext(scopeActual, type));
+			VirtualStructure.reserveSpaces(scopeActual, type, r - 1);
+			actualProcedure.increaseCounterByX(VirtualStructure.VariableType.Local, type, r);
 			
 			Parameter p = new Parameter(type, vDim.VirtualDir, false);
 			p.Dimensions = vDim.Dimensions;

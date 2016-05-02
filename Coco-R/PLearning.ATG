@@ -13,6 +13,7 @@ COMPILER PLearning
 	int tipoActual;
 	int scopeActual = VirtualStructure.VariableType.Global;	//Apunta al scope actual, global o local
 	string programID;										//Nombre del programa
+	string valorConst;
 
 	Stack<int> POper = new Stack<int>();					//Pila de operadores para la generación de cuadruplos
 	Stack<int> PilaOperandos = new Stack<int>();			//Pila de operandos para la generación de cuádruplos
@@ -187,7 +188,7 @@ COMPILER PLearning
 			//Se revisa que el tipo coincida
 			if (argumentType != procedureTable[id].Parameters[k].Type)
 			{
-				SemErr("Error - Los tipos no coinciden con la función");
+				SemErr("Error - Los tipos de parámetros no coinciden con la función");
 			}
 
 			//Si el parametro usado en la llamada es por referencia y en la declaración no lo es, o viceversa, se marca error
@@ -195,11 +196,11 @@ COMPILER PLearning
 			{
 				if (refer)
 				{
-					SemErr("Error, el parámetro que se declaró en la función no es por referencia.");
+					SemErr("Error - El parámetro que se declaró en la función no es por referencia.");
 				}
 				else
 				{
-					SemErr("Error, el parámetro que se declaró en la función es por referencia.");
+					SemErr("Error - El parámetro que se declaró en la función es por referencia.");
 				}
 
 			}
@@ -252,7 +253,7 @@ COMPILER PLearning
 		}
 		else
 		{
-			SemErr("El numero de parametros no coindice con la declaración de la función");
+			SemErr("El número de parámetros no coindice con la declaración de la función.");
 		}
 
 		//Se regresa el argumento
@@ -288,7 +289,7 @@ COMPILER PLearning
 		//Si en el tope de la pila de tipos no hay un entero se marca error porque el indice solo puede ser de tipo entero.
 		if (PTipos.Peek() != DataType.Int)
 		{
-			SemErr("Error - El indexamiento para arreglos necesita ser de tipo entero.");
+			SemErr("Error - El indexamiento para variables dimensioandas necesita ser de tipo entero.");
 		}
 
 		//Se inserta el cuádruplo para verificar que el indice caiga dentro de los rangos de la dimension correspondiente
@@ -467,7 +468,7 @@ vars = tipo
 		//Si la variable ya estaba declarada anteriormente, se genera un error
 		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
-			SemErr("Error - Variable " + t.val + " previamente declarada");
+			SemErr("Error - Variable " + t.val + " previamente declarada.");
 		}
 		//Si no estaba declarada
 		else
@@ -503,7 +504,7 @@ vars = tipo
 		foreach (int r in registros)
 		{
 
-			int index = constantTable.FindIndex(x => x.Name == t.val);
+			int index = constantTable.FindIndex(x => x.Name == valorConst);
 			insertQuadruple(OperationCode.Assignment, constantTable[index].VirtualDir, -1, r);
 		}
 
@@ -595,7 +596,7 @@ ID
 		//Se revise que la función no haya sido previamente declarada en el diccionario de procedimientos
 		if (procedureTable.ContainsKey(t.val))
 		{
-			SemErr("Error - Funcion '" + t.val + "' previamente declarada");
+			SemErr("Error - Funcion '" + t.val + "' previamente declarada.");
 		}
 		else
 		{
@@ -642,7 +643,7 @@ PARAB [parametro {COMA parametro }] PARCI LLAVEAB
 		//Si el tipo de la expresión no coincide con el tipo de retorno se marca error
 		if (returnType != retType)
 		{
-			SemErr("Error - Tipos incompatibles en return");
+			SemErr("Error - Tipos incompatibles en return.");
 		}
 		else
 		{
@@ -697,7 +698,7 @@ parametro =
  		//Si la variable ya estaba declarada se marca error
  		if (actualProcedure.VariableTable.ContainsKey(t.val))
 		{
-			SemErr("Variable previamente declarada");
+			SemErr("Variable previamente declarada.");
 		}
 		else
 		{
@@ -716,7 +717,7 @@ CORCHAB CTEENTERA
 		//Si es por referencia, y se encuentra con dimensiones, entonces se marca error.
 		if (refer)
 		{
-			SemErr("No se pueden mandar variables dimensionadas como parametros por referencia.");
+			SemErr("No se pueden mandar variables dimensionadas como parámetros por referencia.");
 		}
 
 		//Se crea una nueva lista de dimensiones y se añade la primera dimensión que se encontró
@@ -831,7 +832,7 @@ PARAB expresion
 		//Si este no es booleano, entonces se marca error
 		if (aux != DataType.Bool)
 		{
-			SemErr("Error - Se esperaba un booleano en el while");
+			SemErr("Error - Se esperaba un booleano en el while.");
 			finishExecution();
 		}
 		else
@@ -927,7 +928,7 @@ PYC expresion
 		if (tipo != DataType.Bool)
 		{
 			//Si no lo es se marca error de semántica
-			SemErr("Error - Se esperaba un booleano en el for");
+			SemErr("Error - Se esperaba un booleano en el for.");
 			finishExecution();
 		}
 		else
@@ -1158,7 +1159,7 @@ cuantificador] IGUAL
 			//Si la función que se intentó llamar se declaró como algo diferente a void entonces hay error
 			if (procedureTable[id].Type != 0)
 			{
-				SemErr("Error - La llamada a la función tiene que ser a una función void");
+				SemErr("Error - La llamada a la función tiene que ser a una función void.");
 			}
 			else
 			{
@@ -1211,7 +1212,7 @@ cuantificador] IGUAL
 		//Se marca error si no coincide el número de parámetros con lo que se declaró
 		if (k + 1 < procedureTable[id].Parameters.Count)
 		{
-			SemErr("Error - El numero de parametros no coindice con la declaración de la función");
+			SemErr("Error - El número de parámetros no coindice con la declaración de la función.");
 		}
 
 		//Se inserta el cuádruplo de ir a la función
@@ -1252,7 +1253,7 @@ cuantificador =
 	//Si la variable declarada no tiene dimensiones, se marca error.
 	if (vDim.Dimensions.Count == 0)
 	{
-		SemErr("Error - La variable que se intenta accesar no es dimensionada");
+		SemErr("Error - La variable que se intenta accesar no es dimensionada.");
 	}
 	else
 	{
@@ -1445,7 +1446,7 @@ factor = PARAB
  		//Se saca el fondo falso
  		POper.Pop();
 	.)
-  | ctevar.
+  | ctevar .
 
 /*---------------------------------------------- CTEVAR ---------------------------------------------- */
 ctevar = (ctelet | ctebool | ctenum | ID
@@ -1569,11 +1570,13 @@ ctelet = (CTESTRING
 	(.
 		//Se intenta insertar la constante string al diccionario de constantes 
 		tryToInsertConstant(DataType.String, t.val.Replace("\"", "").Replace(@"\n", "\n"));
+		valorConst = t.val;
 	.)
  | CTECHAR
 	(.
 		//Se intenta insertar la constante char al diccionario de constantes 
 		tryToInsertConstant(DataType.Char, t.val);
+		valorConst = t.val;
 	.)
  ).
 
@@ -1582,6 +1585,7 @@ ctebool = (TRUE | FALSE)
 	(.
 		//Se intenta insertar la constante bool al diccionario de constantes 
 		tryToInsertConstant(DataType.Bool, t.val);
+		valorConst = t.val;
 	.)
 .
 
@@ -1598,11 +1602,13 @@ ctenum =
 	(.
 		//Se intenta insertar la constante entera al diccionario de constantes 
 		tryToInsertConstant(DataType.Int, (negativo? "-" : "") + t.val);
+		valorConst = (negativo? "-" : "") + t.val;
 	.)
 | CTEFLOAT
 	(.
 		//Se intenta insertar la constante flotante al diccionario de constantes 
 		tryToInsertConstant(DataType.Float, (negativo? "-" : "") + t.val);
+		valorConst = (negativo? "-" : "") + t.val;
 	.)
 ).
 

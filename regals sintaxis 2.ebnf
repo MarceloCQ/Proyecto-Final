@@ -1,0 +1,62 @@
+
+PLearning = PROGRAM ID PYC {vars} {funcion} main.
+
+vars = tipo ( atomicos | dimensionadas ) PYC.
+
+atomicos = ID {COMA ID} [IGUAL (ctelet | ctenum | ctebool)].
+
+dimensionadas = CORCHAB CTEENTERA [ COMA CTEENTERA [ COMA CTEENTERA] ] CORCHCI ID {COMA ID}.
+
+funcion = FUNCTION regresa ID  PARAB [parametro {COMA parametro }] PARCI LLAVEAB {vars} {estatuto} [ RETURN expresion  PYC ] LLAVECI  .
+
+parametro =[REF] tipo (ID | CORCHAB CTEENTERA [ COMA CTEENTERA [ COMA CTEENTERA] ] CORCHCI ID) .
+
+main = VOID MAIN PARAB PARCI LLAVEAB {vars} {estatuto} LLAVECI.
+
+regresa = (tipo | VOID).
+
+tipo = (INT | FLOAT | STRING | BOOL | CHAR).
+
+bloque = LLAVEAB {estatuto} LLAVECI .
+
+ciclowhile = WHILE PARAB expresion PARCI bloque.
+
+ciclofor = FOR PARAB ID IGUAL expresion PYC expresion PYC expresion PARCI bloque .
+
+ciclos = (ciclowhile | ciclofor).
+
+condicion = IFF PARAB expresion PARCI bloque [ELSE  bloque].
+
+estatuto = (condicion | escritura | ciclos | asignacion | llamada ). 
+
+lectura = READLINE PARAB PARCI.
+
+escritura = PRINT PARAB expresion { COMA expresion } PARCI PYC.
+
+asignacion = ID [cuantificador] IGUAL (expresion | lectura) PYC.
+
+llamada = ID PARAB [ ( REF ID | expresion ) { COMA ( REF ID | expresion ) } ] PARCI PYC.
+
+cuantificador = CORCHAB expresion [COMA expresion [COMA expresion] ] CORCHCI.
+
+expresion = comparacion {(AND | OR) comparacion }.
+
+comparacion = exp [(MAQUE | MEQUE | MAQUEEQ | MEQUEEQ | DIFERENTE | COMPARACION) exp].
+
+exp = term {(MAS | MENOS) term}.
+
+term = factor {(MULT | DIV) factor }.
+
+factor = PARAB expresion PARCI | ctevar.
+
+ctevar = (ctelet | ctebool | ctenum | identificador | cuantificador | ).
+
+identificador = ID PARAB [ ( REF ID | expresion ) { COMA ( REF ID | expresion ) } ] PARCI.
+
+ctelet = (CTESTRING | CTECHAR ).
+
+ctebool = (TRUE | FALSE).
+
+ctenum = [MAS | MENOS ] (CTEENTERA | CTEFLOAT).
+
+

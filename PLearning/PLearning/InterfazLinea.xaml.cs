@@ -210,7 +210,33 @@ namespace PLearning
             newIntLinea.LinkedTo = LinkedTo;
             newIntLinea.LineNo = LineNo;
 
-            return newIntLinea;
+            if (!(Actual is Image))
+            {
+                if (Actual != null)
+                {
+                    int i = 0;
+                    foreach (UIElement childSrc in ((StackPanel)Actual).Children)
+                    {
+                        UIElement childDest = ((StackPanel)newIntLinea.Actual).Children[i] as UIElement;
+
+                        childDest.Visibility = childSrc.Visibility;
+
+                        if (childSrc is TextBox)
+                        {
+                            ((TextBox)childDest).Text = ((TextBox)childSrc).Text;
+                        }
+                        else if (childSrc is ComboBox)
+                        {
+                            ((ComboBox)childDest).SelectedIndex = ((ComboBox)childSrc).SelectedIndex;
+                        }
+
+                        i++;
+
+                    }
+                }
+            }
+
+                return newIntLinea;
                
         }
 

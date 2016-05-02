@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:PLearning" x:Class="PLearning.MainWindow"
         xmlns:System="clr-namespace:System;assembly=mscorlib"
-        Title="MainWindow" Height="700" Width="1200" Loaded="Window_Loaded">
+        Title="PLearning" Height="700" Width="1200" Loaded="Window_Loaded">
 
     <Window.Resources>
         <System:Double x:Key="RenglonHeight">29</System:Double>

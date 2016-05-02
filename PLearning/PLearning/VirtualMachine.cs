@@ -54,7 +54,7 @@ namespace PLearning_Backend
             //Si empieza y termina con comillas, entonces es un string
             if (s.StartsWith("\"") && s.EndsWith("\""))
             {
-                value = s;
+                value = s.Replace("\"", "").Replace(@"\n", "\n");
                 return DataType.String;
             }
             //Si es true o false, entonces es un booleano
@@ -481,7 +481,7 @@ namespace PLearning_Backend
                         //Se revisa que no sea menor que cero o mayor o igual que el limite superior
                         if (rValue < 0 || rValue >= actQuadruple.TemporalRegorJump)
                         {
-                            Console.WriteLine("Error - El indice de la variable está fuera del rango.");
+                            Output.Text = "Error - El índice de la variable está fuera del rango.";
                             ProgramCounter = quadruples.Count - 1;
 
                         }

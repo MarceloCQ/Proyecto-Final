@@ -1,0 +1,18 @@
+Program^1^-1^program FibonacciNor ;^FibonacciNor^
+Function^1^10^function int fibonacci ( int num ) {^1^fibonacci^int num^
+Vars^2^-1^int ant, antesant = 1  ;^0^?^?^?^?^ant, antesant^1^
+Vars^2^-1^int i, res ;^0^?^?^?^?^i, res^?^?^?^?^
+For^2^8^for ( i = 3 ; i <= num ; i + 1 ) {^i = 3^i <= num^i + 1^
+Assign^3^-1^res = ant + antesant ;^res^ant + antesant^
+Assign^3^-1^antesant = ant ;^antesant^ant^
+Assign^3^-1^ant = res ;^ant^res^
+Other^2^4^}^
+Return^2^-1^return res ; ^res^
+Other^1^1^}^
+Main^1^17^void main() {^
+Vars^2^-1^int num ;^0^?^?^?^?^num^?^?^?^?^
+Read^2^-1^num = read() ;^num^
+Write^2^-1^print ( fibonacci(num) ) ;^fibonacci(num)^
+None^2^-1^
+None^2^-1^
+Other^1^11^}^

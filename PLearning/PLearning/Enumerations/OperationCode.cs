@@ -15,8 +15,8 @@ namespace PLearning_Backend.Enumerations
         public const int Or = 1;                //Operación lógica or
         public const int MoreThan = 2;          //Operación de comparación mayor que
         public const int LessThan = 3;          //Operación de comparación menor que
-        public const int Different = 4;         //Operacion de comparación diferente
-        public const int EqualComparison = 5;   //Operacion de comparación igual
+        public const int Different = 4;         //Operación de comparación diferente
+        public const int EqualComparison = 5;   //Operación de comparación igual
         public const int Sum = 6;               //Operación aritmética suma
         public const int Substraction = 7;      //Operación aritmética resta
         public const int Multiplication = 8;    //Operación aritmética multiplicación
@@ -35,8 +35,8 @@ namespace PLearning_Backend.Enumerations
         public const int GoSub = 21;            //Sirve para desactivar la memoria actual 
         public const int EndProg = 22;          //Indica que ya se acabo el programa
         public const int Verify = 23;           //Verifica que el índice esté dentro del rango
-        public const int EndFunc = 24;          //Indica que ya se acabo la función y no vienen mas parametros por referencia que resolver
-        public const int Ref = 25;              //Asigna de la memoria de la función a la ultima memoría dormida los parámetros por referencia
+        public const int EndFunc = 24;          //Indica que ya se acabo la función y no vienen mas parámetros por referencia que resolver
+        public const int Ref = 25;              //Asigna de la memoria de la función a la ultima memoria dormida los parámetros por referencia
 
 
         /// <summary>

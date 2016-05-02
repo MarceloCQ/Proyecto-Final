@@ -1,0 +1,61 @@
+PLEARNING = program id ";" {VARS} {FUNCION} MAIN.
+
+VARS = TIPO ( ATOMICOS | DIMENSIONADAS ) ";".
+
+ATOMICOS = id {"," id} ["=" (CTELET | CTENUM | CTEBOOL)].
+
+DIMENSIONADAS = "[" cteentera [ "," cteentera [ "," cteentera] ] "]" id {"," id}.
+
+FUNCION = function REGRESA id  "(" [PARAMETRO {"," PARAMETRO }] ")" "{" {VARS} {ESTATUTO} [ return EXPRESION  ";" ] "}"  .
+
+PARAMETRO =[ref] TIPO (id | "[" cteentera [ "," cteentera [ "," cteentera] ] "]" id) .
+
+MAIN = void main "(" ")" "{" {VARS} {ESTATUTO} "}".
+
+REGRESA = (TIPO | void).
+
+TIPO = (int | float | string | bool | char).
+
+BLOQUE = "{" {ESTATUTO} "}" .
+
+CICLOWHILE = while "(" EXPRESION ")" BLOQUE.
+
+CICLOFOR = for "(" id "=" EXPRESION ";" EXPRESION ";" EXPRESION ")" BLOQUE .
+
+CICLOS = (CICLOWHILE | CICLOFOR).
+
+CONDICION = if "(" EXPRESION ")" BLOQUE [else  BLOQUE].
+
+ESTATUTO = (CONDICION | ESCRITURA | CICLOS | ASIGNACION | LLAMADA ). 
+
+LECTURA = read "(" ")".
+
+ESCRITURA = print "(" EXPRESION { "," EXPRESION } ")" ";".
+
+ASIGNACION = id [CUANTIFICADOR] "=" (EXPRESION | LECTURA) ";".
+
+LLAMADA = id "(" [ ( ref id | EXPRESION ) { "," ( ref id | EXPRESION ) } ] ")" ";".
+
+CUANTIFICADOR = "[" EXPRESION ["," EXPRESION ["," EXPRESION] ] "]".
+
+EXPRESION = COMPARACION {(and | or) COMPARACION }.
+
+COMPARACION = EXP [(">" | "<" | "==" | "!=" | ">=" | "<=") EXP].
+
+EXP = TERM {("+" | "-") TERM}.
+
+TERM = FACTOR {("*" | "/") FACTOR }.
+
+FACTOR = "(" EXPRESION ")" | CTEVAR.
+
+CTEVAR = (CTELET | CTEBOOL | CTENUM | IDENTIFICADOR).
+
+IDENTIFICADOR = id ( "(" [ ( ref id | EXPRESION ) { "," ( ref id | EXPRESION ) } ] ")" |  | CUANTIFICADOR | ).
+
+CTELET = (ctestring | ctechar ).
+
+CTEBOOL = (true | false).
+
+CTENUM = ["+" | "-" ] (cteentera | ctefloat).
+
+
